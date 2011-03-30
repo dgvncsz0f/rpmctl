@@ -57,7 +57,7 @@ build:
 
 tests:
 	@$(MAKE) __build_test
-	@$(DIST)/$(TEST)
+	@$(DIST)/bin/$(TEST)
 
 ifeq ($(BIN_FIND),)
 clean:
@@ -70,16 +70,16 @@ clean:
 	rm -rf $(DIST)
 endif
 
-%/$(SLIB): $(OBJ_FILES)
-	$(BIN_TEST) -d $(dir $(@)) || mkdir $(dir $(@))
+%/lib/$(SLIB): $(OBJ_FILES)
+	$(BIN_TEST) -d $(dir $(@)) || mkdir -p $(dir $(@))
 	$(CXX) -shared -Wl,-soname,$(SLIB) -o$(@) $(^) $(LDFLAGS)
 
-%/$(TEST): src/test/run_tests.cc $(OBJ_FILES) $(OBJ_FILES_TEST)
-	$(BIN_TEST) -d $(dir $(@)) || mkdir $(dir $(@))
+%/bin/$(TEST): src/test/run_tests.cc $(OBJ_FILES) $(OBJ_FILES_TEST)
+	$(BIN_TEST) -d $(dir $(@)) || mkdir -p $(dir $(@))
 	$(CXX) $(CPPFLAGS) -o$(@) $(^) $(LDFLAGS)
 
-%/$(MAIN): src/main/rpmctl.cc $(OBJ_FILES)
-	$(BIN_TEST) -d $(dir $(@)) || mkdir $(dir $(@))
+%/bin/$(MAIN): src/main/rpmctl.cc $(OBJ_FILES)
+	$(BIN_TEST) -d $(dir $(@)) || mkdir -p $(dir $(@))
 	$(CXX) $(CPPFLAGS) -o$(@) $(^) $(LDFLAGS)
 
 %.cc : %.hh
@@ -91,12 +91,12 @@ __compile_obj_test: CPPFLAGS += -I/usr/include/unittest++
 __compile_obj_test: $(OBJ_FILES_TEST)
 
 __build_main: CPPFLAGS += -licuio -ldb_cxx
-__build_main: $(DIST)/$(MAIN)
+__build_main: $(DIST)/bin/$(MAIN)
 
 __build_test: CPPFLAGS += -I/usr/include/unittest++
-__build_test: __compile_obj $(DIST)/$(TEST)
+__build_test: __compile_obj $(DIST)/bin/$(TEST)
 
-__build_slib: $(DIST)/$(SLIB)
+__build_slib: $(DIST)/lib/$(SLIB)
 
 
 ifeq ($(BIN_TEST),)
