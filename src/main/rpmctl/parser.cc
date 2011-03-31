@@ -35,14 +35,24 @@
 #include <rpmctl/parser.hh>
 #include <rpmctl/scoped_fh.hh>
 
+typedef std::pair<int32_t,int32_t> int32t_pair;
+
 static
-void __exread(UnicodeString &out, UFILE *fh)
+void __exread(UnicodeString &out, UFILE *fh, size_t bufsz)
 {
-  UChar buffer[RPMCTL_MAXVARLEN];
-  int32_t length = u_file_read(buffer, RPMCTL_MAXVARLEN, fh);
+  UChar *buffer = new UChar[bufsz];
+  int32_t length = u_file_read(buffer, bufsz, fh);
   if (length == -1)
     throw(std::runtime_error("error reading file"));
   out.append(UnicodeString(buffer, length));
+}
+
+static
+int32t_pair __findvar(const UnicodeString &txt)
+{
+  int32_t spos = txt.indexOf("$(");
+  int32_t epos = (spos==-1 ? -1 : txt.indexOf(")", spos));
+  return(int32t_pair(spos, epos));
 }
 
 rpmctl::parser_events::~parser_events()
@@ -63,27 +73,16 @@ void rpmctl::parser::run(const std::string &file)
     while (!u_feof(*fh))
     {
       UnicodeString txt;
-      __exread(txt, *fh);
+      __exread(txt, *fh, 2*RPMCTL_MAXVARLEN);
       
-      int32_t spos = txt.indexOf("$(");
-      int32_t epos = txt.indexOf(")", abs(spos));
-      if (spos == -1)
+      int32t_pair pos = __findvar(txt);
+      if (pos.first==-1 || pos.second==-1)
 	_e.on_text(txt, data);
       else
       {
-	if (epos == -1)
-	{
-	  __exread(txt, *fh);
-	  epos = txt.indexOf(")", spos);
-	}
-	if (epos == -1)
-	  _e.on_text(txt, data);
-	else
-	{
-	  _e.on_text(txt.tempSubString(0, spos), data);
-	  _e.on_variable(txt.tempSubString(spos+2, epos-spos-2), data);
-	  _e.on_text(txt.tempSubString(epos+1), data);
-	}
+	_e.on_text(txt.tempSubString(0, pos.first), data);
+	_e.on_variable(txt.tempSubString(pos.first+2, pos.second-pos.first-2), data);
+	_e.on_text(txt.tempSubString(pos.second+1), data);
       }
     }
 
