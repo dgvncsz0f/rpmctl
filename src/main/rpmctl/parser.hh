@@ -93,7 +93,7 @@ namespace rpmctl
   private:
     parser_events<T> &_e;
   };
-};
+}
 
 #include "parser.cc.template"
 

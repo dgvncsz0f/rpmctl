@@ -26,9 +26,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <memory>
 #include <iostream>
 #include <rpmctl/excepts.hh>
 #include <rpmctl/env_bdb.hh>
+
+class myautoptr_adapter
+{
+public:
+  myautoptr_adapter(char *array) :
+    _array(array)
+  {}
+  ~myautoptr_adapter()
+  {
+    delete[](_array);
+  }
+
+  char *operator*() const
+  {
+    return(_array);
+  }
+
+private:
+  char *_array;
+};
 
 rpmctl::env_bdb::env_bdb(const std::string &envroot) throw(rpmctl::rpmctl_except) :
   _env(0),
@@ -68,24 +89,21 @@ rpmctl::env_bdb::~env_bdb()
 void rpmctl::env_bdb::put(const UnicodeString &key, const UnicodeString &val) throw(rpmctl::rpmctl_except)
 {
   int32_t keylength = key.extract(0, key.length(), NULL, "UTF-8");
-  char keybuffer[keylength+1];
-  key.extract(0, key.length(), keybuffer, "UTF-8");
+  std::auto_ptr<myautoptr_adapter> keybuffer(new myautoptr_adapter(new char[keylength+1]));
+  key.extract(0, key.length(), **keybuffer, "UTF-8");
 
   int32_t vallength = val.extract(0, val.length(), NULL, "UTF-8");
-  char *valbuffer = new char[vallength+1];
-  val.extract(0, val.length(), valbuffer, "UTF-8");
+  std::auto_ptr<myautoptr_adapter> valbuffer(new myautoptr_adapter(new char[vallength+1]));
+  val.extract(0, val.length(), **valbuffer, "UTF-8");
 
-  Dbt dbkey(keybuffer, keylength);
-  Dbt dbval(valbuffer, vallength);
+  Dbt dbkey(**keybuffer, keylength);
+  Dbt dbval(**valbuffer, vallength);
   try
   {
     _db->put(NULL, &dbkey, &dbval, DB_OVERWRITE_DUP);
-    delete[](valbuffer);
   }
   catch (const DbException &e)
   {
-    delete[](valbuffer);
-
     std::string what;
     what += "dbexception: ";
     what += e.what();
@@ -95,11 +113,14 @@ void rpmctl::env_bdb::put(const UnicodeString &key, const UnicodeString &val) th
 
 UnicodeString rpmctl::env_bdb::get(const UnicodeString &key, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
 {
-  int32_t keylength = key.extract(0, key.length(), NULL, "UTF-8");
-  char keybuffer[keylength+1];
-  key.extract(0, key.length(), keybuffer, "UTF-8");
+  std::auto_ptr<myautoptr_adapter> keybuffer(NULL);
+  std::auto_ptr<myautoptr_adapter> valbuffer(NULL);
 
-  Dbt dbkey(keybuffer, keylength);
+  int32_t keylength = key.extract(0, key.length(), NULL, "UTF-8");
+  keybuffer.reset(new myautoptr_adapter(new char[keylength+1]));
+  key.extract(0, key.length(), **keybuffer, "UTF-8");
+
+  Dbt dbkey(**keybuffer, keylength);
   Dbt dbval;
   dbval.set_data(NULL);
   dbval.set_ulen(0);
@@ -115,13 +136,12 @@ UnicodeString rpmctl::env_bdb::get(const UnicodeString &key, const UnicodeString
     catch (const DbMemoryException &)
     {
       u_int32_t vallength = dbval.get_size();
-      char *valbuffer     = new char[vallength];
+      valbuffer.reset(new myautoptr_adapter(new char[vallength]));
       dbval.set_ulen(vallength);
-      dbval.set_data(valbuffer);
+      dbval.set_data(**valbuffer);
       _db->get(NULL, &dbkey, &dbval, 0);
       
-      UnicodeString retval(valbuffer, vallength, "UTF-8");
-      delete[](valbuffer);
+      UnicodeString retval(**valbuffer, vallength, "UTF-8");
       return(retval);
     }
   }

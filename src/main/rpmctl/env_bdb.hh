@@ -50,6 +50,6 @@ namespace rpmctl
     DbEnv _env;
     Db *_db;
   };
-};
+}
 
 #endif

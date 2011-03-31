@@ -29,12 +29,12 @@ BIN_FIND  = $(shell which find 2>/dev/null)
 BIN_TEST  = $(shell which test 2>/dev/null)
 BIN_TOUCH = $(shell which touch 2>/dev/null)
 
-INC_FILES  = $(wildcard src/main/rpmctl/*.hh)
-SRC_FILES  = $(wildcard src/main/rpmctl/*.cc)
+INC_FILES  = $(wildcard src/main/rpmctl/*.hh) $(wildcard src/main/rpmctl/ui/*.hh) 
+SRC_FILES  = $(wildcard src/main/rpmctl/*.cc) $(wildcard src/main/rpmctl/ui/*.cc)
 OBJ_FILES  = $(addsuffix .o, $(basename $(SRC_FILES)))
 
-INC_FILES_TEST = $(wildcard src/test/**/*.hh)
-SRC_FILES_TEST = $(wildcard src/test/**/*.cc)
+INC_FILES_TEST = $(wildcard src/test/*.hh) $(wildcard src/test/ui/*.hh)
+SRC_FILES_TEST = $(wildcard src/test/*.cc) $(wildcard src/test/ui/*.cc)
 OBJ_FILES_TEST = $(addsuffix .o, $(basename $(SRC_FILES_TEST)))
 
 TEST = run_tests
@@ -43,7 +43,7 @@ SLIB = librpmctl.so
 
 DIST = $(CURDIR)/dist
 
-override CPPFLAGS += -W -Wall -fPIC -Isrc/main -Isrc/test
+override CPPFLAGS += -W -Wall -pedantic -fPIC -Isrc/main -Isrc/test
 override LDFLAGS  += 
 
 compile:

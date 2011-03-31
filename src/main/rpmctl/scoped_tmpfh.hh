@@ -46,6 +46,6 @@ namespace rpmctl
   protected:
     std::string _tmpfile;
   };
-};
+}
 
 #endif

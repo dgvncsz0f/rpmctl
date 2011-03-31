@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <unicode/uclean.h>
 #include <rpmctl/parser.hh>
 #include <rpmctl/env_bdb.hh>
 #include <rpmctl/packagevars.hh>
@@ -36,5 +37,6 @@ int main(int, const char *argv[])
   rpmctl::packagevars vl(env);
   rpmctl::parser<rpmctl::handle> parser(vl);
   parser.run(argv[2]);
+  u_cleanup();
   return(0);
 }

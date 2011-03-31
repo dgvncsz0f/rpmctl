@@ -47,6 +47,6 @@ namespace rpmctl
   private:
     UFILE *_fh;
   };
-};
+}
 
 #endif

@@ -74,6 +74,6 @@ namespace rpmctl
   private:
     environment &_e;
   };
-};
+}
 
 #endif
