@@ -29,7 +29,7 @@
 #include <memory>
 #include <iostream>
 #include <rpmctl/excepts.hh>
-#include <rpmctl/env_bdb.hh>
+#include <rpmctl/bdb_environment.hh>
 
 class myautoptr_adapter
 {
@@ -51,7 +51,7 @@ private:
   char *_array;
 };
 
-rpmctl::env_bdb::env_bdb(const std::string &envroot) throw(rpmctl::rpmctl_except) :
+rpmctl::bdb_environment::bdb_environment(const std::string &envroot) throw(rpmctl::rpmctl_except) :
   _env(0),
   _db(NULL)
 {
@@ -79,14 +79,14 @@ rpmctl::env_bdb::env_bdb(const std::string &envroot) throw(rpmctl::rpmctl_except
   }
 }
 
-rpmctl::env_bdb::~env_bdb()
+rpmctl::bdb_environment::~bdb_environment()
 {
   _db->close(0);
   _env.close(0);
   delete(_db);
 }
 
-void rpmctl::env_bdb::put(const UnicodeString &key, const UnicodeString &val) throw(rpmctl::rpmctl_except)
+void rpmctl::bdb_environment::put(const UnicodeString &key, const UnicodeString &val) throw(rpmctl::rpmctl_except)
 {
   int32_t keylength = key.extract(0, key.length(), NULL, "UTF-8");
   std::auto_ptr<myautoptr_adapter> keybuffer(new myautoptr_adapter(new char[keylength+1]));
@@ -111,7 +111,7 @@ void rpmctl::env_bdb::put(const UnicodeString &key, const UnicodeString &val) th
   }
 }
 
-UnicodeString rpmctl::env_bdb::get(const UnicodeString &key, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
+UnicodeString rpmctl::bdb_environment::get(const UnicodeString &key, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
 {
   std::auto_ptr<myautoptr_adapter> keybuffer(NULL);
   std::auto_ptr<myautoptr_adapter> valbuffer(NULL);

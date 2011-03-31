@@ -26,50 +26,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_PACKAGEVARS_HH__
-#define __RPMCTL_PACKAGEVARS_HH__
+#ifndef __RPMCTL_STEMPLATE_HH__
+#define __RPMCTL_STEMPLATE_HH__
 
 #include <unicode/unistr.h>
 #include <rpmctl/parser.hh>
+#include <rpmctl/environment.hh>
 #include <rpmctl/scoped_fh.hh>
 #include <rpmctl/scoped_tmpfh.hh>
 
 namespace rpmctl
 {
 
-  class environment
+  struct stemplate_handler
   {
-  public:
-    virtual ~environment();
-
-    virtual UnicodeString get(const UnicodeString &key, const UnicodeString &defvalue) = 0;
-
-    virtual void put(const UnicodeString &key, const UnicodeString &val) = 0;
-  };
-
-  struct handle
-  {
-    handle(const std::string cfgfile);
-
+    stemplate_handler(const std::string cfgfile);
+    
     std::string _cfgfile;
     scoped_tmpfh _tmpfh;
   };
 
-  class packagevars : public parser_events<handle>
+  class stemplate : public parser_events<stemplate_handler>
   {
   public:
-    packagevars(environment &);
-    virtual ~packagevars();
+    stemplate(environment &);
+    virtual ~stemplate();
 
-    virtual handle *on_start(const std::string &filename);
+    virtual stemplate_handler *on_start(const std::string &filename);
 
-    virtual void on_text(const UnicodeString &, handle *);
+    virtual void on_text(const UnicodeString &, stemplate_handler *);
 
-    virtual void on_variable(const UnicodeString &, handle *);
+    virtual void on_variable(const UnicodeString &, stemplate_handler *);
 
-    virtual void on_eof(handle *);
+    virtual void on_eof(stemplate_handler *);
 
-    virtual void on_error(handle *);
+    virtual void on_error(stemplate_handler *);
 
   private:
     environment &_e;

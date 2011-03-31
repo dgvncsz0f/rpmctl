@@ -26,17 +26,62 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/parser.hh>
-#include <rpmctl/bdb_environment.hh>
+#include <stdexcept>
+#include <cstdio>
+#include <unicode/ustdio.h>
 #include <rpmctl/stemplate.hh>
+#include <rpmctl/scoped_tmpfh.hh>
 
-int main(int, const char *argv[])
+static
+void __exfwrite(UFILE *fh, const UnicodeString &txt)
 {
-  rpmctl::bdb_environment env(argv[1]);
-  rpmctl::stemplate vl(env);
-  rpmctl::parser<rpmctl::stemplate_handler> parser(vl);
-  parser.run(argv[2]);
-  u_cleanup();
-  return(0);
+  int32_t length = txt.length();
+  while (length > 0)
+  {
+    int32_t offset = txt.length() - length;
+    const UChar *buffer = txt.getBuffer();
+    length -= u_file_write(buffer + offset, length, fh);
+  }
+}
+
+rpmctl::stemplate_handler::stemplate_handler(const std::string cfgfile) :
+  _cfgfile(cfgfile),
+  _tmpfh()
+{}
+
+rpmctl::stemplate::stemplate(environment &e) :
+  _e(e)
+{}
+
+rpmctl::stemplate::~stemplate()
+{}
+
+rpmctl::stemplate_handler *rpmctl::stemplate::on_start(const std::string &cfgfile)
+{
+  return(new stemplate_handler(cfgfile));
+}
+
+void rpmctl::stemplate::on_text(const UnicodeString &txt, stemplate_handler *data)
+{
+  __exfwrite(*(data->_tmpfh), txt);
+}
+
+void rpmctl::stemplate::on_variable(const UnicodeString &key, stemplate_handler *data)
+{
+  UnicodeString rawvar= "$(" + key +")";
+  __exfwrite(*(data->_tmpfh), _e.get(key, rawvar));
+}
+
+void rpmctl::stemplate::on_eof(stemplate_handler *data)
+{
+  const std::string &tmpfile = data->_tmpfh.tmpfile();
+  const std::string &cfgfile = data->_cfgfile;
+  if (std::rename(tmpfile.c_str(), cfgfile.c_str()) != 0)
+    throw(std::runtime_error("could not move file "+ tmpfile +"to its destination: " + cfgfile));
+  delete(data);
+}
+
+void rpmctl::stemplate::on_error(stemplate_handler *data)
+{
+  delete(data);
 }

@@ -26,17 +26,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/parser.hh>
-#include <rpmctl/bdb_environment.hh>
-#include <rpmctl/stemplate.hh>
+#ifndef __RPMCTL_BDB_ENVIRONMENT_HH__
+#define __RPMCTL_BDB_ENVIRONMENT_HH__
 
-int main(int, const char *argv[])
+#include <string>
+#include <unicode/unistr.h>
+#include <db_cxx.h>
+#include <rpmctl/environment.hh>
+#include <rpmctl/excepts.hh>
+
+namespace rpmctl
 {
-  rpmctl::bdb_environment env(argv[1]);
-  rpmctl::stemplate vl(env);
-  rpmctl::parser<rpmctl::stemplate_handler> parser(vl);
-  parser.run(argv[2]);
-  u_cleanup();
-  return(0);
+  class bdb_environment : public environment
+  {
+  public:
+    bdb_environment(const std::string &) throw(rpmctl_except);
+    virtual ~bdb_environment();
+
+    virtual UnicodeString get(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
+    virtual void put(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
+
+  private:
+    DbEnv _env;
+    Db *_db;
+  };
 }
+
+#endif

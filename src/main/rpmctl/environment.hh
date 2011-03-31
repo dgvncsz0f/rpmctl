@@ -26,30 +26,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_ENV_BDB_HH__
-#define __RPMCTL_ENV_BDB_HH__
+#ifndef __RPMCTL_ENVIRONMENT_HH__
+#define __RPMCTL_ENVIRONMENT_HH__
 
-#include <string>
 #include <unicode/unistr.h>
-#include <db_cxx.h>
-#include <rpmctl/packagevars.hh>
-#include <rpmctl/excepts.hh>
 
 namespace rpmctl
 {
-  class env_bdb : public environment
+
+  class environment
   {
   public:
-    env_bdb(const std::string &) throw(rpmctl_except);
-    virtual ~env_bdb();
+    virtual ~environment();
 
-    virtual UnicodeString get(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
-    virtual void put(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
+    virtual UnicodeString get(const UnicodeString &key, const UnicodeString &defvalue) = 0;
 
-  private:
-    DbEnv _env;
-    Db *_db;
+    virtual void put(const UnicodeString &key, const UnicodeString &val) = 0;
   };
+
 }
 
 #endif

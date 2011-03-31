@@ -26,65 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdexcept>
-#include <cstdio>
-#include <unicode/ustdio.h>
-#include <rpmctl/packagevars.hh>
-#include <rpmctl/scoped_tmpfh.hh>
-
-static
-void __exfwrite(UFILE *fh, const UnicodeString &txt)
-{
-  int32_t length = txt.length();
-  while (length > 0)
-  {
-    int32_t offset = txt.length() - length;
-    const UChar *buffer = txt.getBuffer();
-    length -= u_file_write(buffer + offset, length, fh);
-  }
-}
-
-rpmctl::handle::handle(const std::string cfgfile) :
-  _cfgfile(cfgfile),
-  _tmpfh()
-{}
+#include <rpmctl/environment.hh>
 
 rpmctl::environment::~environment()
 {}
-
-rpmctl::packagevars::packagevars(environment &e) :
-  _e(e)
-{}
-
-rpmctl::packagevars::~packagevars()
-{}
-
-rpmctl::handle *rpmctl::packagevars::on_start(const std::string &cfgfile)
-{
-  return(new handle(cfgfile));
-}
-
-void rpmctl::packagevars::on_text(const UnicodeString &txt, handle *data)
-{
-  __exfwrite(*(data->_tmpfh), txt);
-}
-
-void rpmctl::packagevars::on_variable(const UnicodeString &key, handle *data)
-{
-  UnicodeString rawvar= "$(" + key +")";
-  __exfwrite(*(data->_tmpfh), _e.get(key, rawvar));
-}
-
-void rpmctl::packagevars::on_eof(handle *data)
-{
-  const std::string &tmpfile = data->_tmpfh.tmpfile();
-  const std::string &cfgfile = data->_cfgfile;
-  if (std::rename(tmpfile.c_str(), cfgfile.c_str()) != 0)
-    throw(std::runtime_error("could not move file "+ tmpfile +"to its destination: " + cfgfile));
-  delete(data);
-}
-
-void rpmctl::packagevars::on_error(handle *data)
-{
-  delete(data);
-}
