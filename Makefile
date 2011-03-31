@@ -90,7 +90,7 @@ __compile_obj: $(OBJ_FILES)
 __compile_obj_test: CPPFLAGS += -I/usr/include/unittest++
 __compile_obj_test: $(OBJ_FILES_TEST)
 
-__build_main: CPPFLAGS += -licuio -ldb_cxx
+__build_main: CPPFLAGS += -licuio -licuuc -ldb_cxx
 __build_main: $(DIST)/bin/$(MAIN)
 
 __build_test: CPPFLAGS += -I/usr/include/unittest++
