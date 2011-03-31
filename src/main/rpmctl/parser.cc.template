@@ -55,16 +55,19 @@ int32t_pair __findvar(const UnicodeString &txt)
   return(int32t_pair(spos, epos));
 }
 
-rpmctl::parser_events::~parser_events()
+template<typename T>
+rpmctl::parser_events<T>::~parser_events()
 {}
 
-rpmctl::parser::parser(parser_events &e) :
+template<typename T>
+rpmctl::parser<T>::parser(parser_events<T> &e) :
   _e(e)
 {}
 
-void rpmctl::parser::run(const std::string &file)
+template<typename T>
+void rpmctl::parser<T>::run(const std::string &file)
 {
-  void *data = _e.on_start(file);
+  T *data = _e.on_start(file);
 
   try
   {

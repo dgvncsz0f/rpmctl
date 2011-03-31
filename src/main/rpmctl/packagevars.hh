@@ -29,8 +29,10 @@
 #ifndef __RPMCTL_PACKAGEVARS_HH__
 #define __RPMCTL_PACKAGEVARS_HH__
 
-#include <rpmctl/parser.hh>
 #include <unicode/unistr.h>
+#include <rpmctl/parser.hh>
+#include <rpmctl/scoped_fh.hh>
+#include <rpmctl/scoped_tmpfh.hh>
 
 namespace rpmctl
 {
@@ -45,21 +47,29 @@ namespace rpmctl
     virtual void put(const UnicodeString &key, const UnicodeString &val) = 0;
   };
 
-  class packagevars : public parser_events
+  struct handle
+  {
+    handle(const std::string cfgfile);
+
+    std::string _cfgfile;
+    scoped_tmpfh _tmpfh;
+  };
+
+  class packagevars : public parser_events<handle>
   {
   public:
     packagevars(environment &);
     virtual ~packagevars();
 
-    virtual void *on_start(const std::string &filename);
+    virtual handle *on_start(const std::string &filename);
 
-    virtual void on_text(const UnicodeString &, void *);
+    virtual void on_text(const UnicodeString &, handle *);
 
-    virtual void on_variable(const UnicodeString &, void *);
+    virtual void on_variable(const UnicodeString &, handle *);
 
-    virtual void on_eof(void *);
+    virtual void on_eof(handle *);
 
-    virtual void on_error(void *);
+    virtual void on_error(handle *);
 
   private:
     environment &_e;

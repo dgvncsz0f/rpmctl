@@ -37,6 +37,7 @@
 
 namespace rpmctl
 {
+  template<typename T>
   class parser_events
   {
   public:
@@ -49,7 +50,7 @@ namespace rpmctl
      *  \return An opaque value that is provided to all events invoked
      *  by the parser.
      */
-    virtual void *on_start(const std::string &) = 0;
+    virtual T *on_start(const std::string &) = 0;
 
     /*! This event is invoked when regular text is found in the config
      *  file.
@@ -57,7 +58,7 @@ namespace rpmctl
      *  \param The text found.
      *  \param The data that `on_start' provided;
      */
-    virtual void on_text(const UnicodeString &, void *) = 0;
+    virtual void on_text(const UnicodeString &, T *) = 0;
 
     /*! This event is invoked when a variable is found in a config
      *  file.
@@ -65,32 +66,35 @@ namespace rpmctl
      *  \param The variable found
      *  \param The data that `on_start' provided;
      */
-    virtual void on_variable(const UnicodeString &, void *) = 0;
+    virtual void on_variable(const UnicodeString &, T *) = 0;
 
     /*! This event is invoked when the parser finishes reading the
      *  file successfully.
      *  
      *  \param The data that `on_start' provided;
      */ 
-    virtual void on_eof(void *) = 0;
+    virtual void on_eof(T *) = 0;
 
     /*! This is called if there was any error instead of on_eof.
      *
      * \param The data that `on_start' provided;
      */
-    virtual void on_error(void *) = 0;
+    virtual void on_error(T *) = 0;
   };
 
+  template<typename T>
   class parser
   {
   public:
-    parser(parser_events &);
+    parser(parser_events<T> &);
 
     void run(const std::string &);
 
   private:
-    parser_events &_e;
+    parser_events<T> &_e;
   };
 };
+
+#include "parser.cc.template"
 
 #endif

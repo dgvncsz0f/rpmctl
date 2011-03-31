@@ -44,29 +44,10 @@ void __exfwrite(UFILE *fh, const UnicodeString &txt)
   }
 }
 
-struct vl_handle
-{
-public:
-  vl_handle(const std::string cfgfile) :
-    _cfgfile(cfgfile),
-    _tmpfh()
-  {}
-
-  rpmctl::scoped_tmpfh &tmpfh()
-  {
-    return(_tmpfh);
-  }
-
-  const std::string &cfgfile() const
-  {
-    return(_cfgfile);
-  }
-
-private:
-  std::string _cfgfile;
-  rpmctl::scoped_tmpfh _tmpfh;
-};
-
+rpmctl::handle::handle(const std::string cfgfile) :
+  _cfgfile(cfgfile),
+  _tmpfh()
+{}
 
 rpmctl::environment::~environment()
 {}
@@ -78,37 +59,32 @@ rpmctl::packagevars::packagevars(environment &e) :
 rpmctl::packagevars::~packagevars()
 {}
 
-void *rpmctl::packagevars::on_start(const std::string &cfgfile)
+rpmctl::handle *rpmctl::packagevars::on_start(const std::string &cfgfile)
 {
-  vl_handle *data = new vl_handle(cfgfile);
-  return(static_cast<void*>(data));
+  return(new handle(cfgfile));
 }
 
-void rpmctl::packagevars::on_text(const UnicodeString &txt, void *rawdata)
+void rpmctl::packagevars::on_text(const UnicodeString &txt, handle *data)
 {
-  vl_handle *data = static_cast<vl_handle*>(rawdata);
-  __exfwrite(*(data->tmpfh()), txt);
+  __exfwrite(*(data->_tmpfh), txt);
 }
 
-void rpmctl::packagevars::on_variable(const UnicodeString &key, void *rawdata)
+void rpmctl::packagevars::on_variable(const UnicodeString &key, handle *data)
 {
   UnicodeString rawvar= "$(" + key +")";
-  vl_handle *data = static_cast<vl_handle*>(rawdata);
-  __exfwrite(*(data->tmpfh()), _e.get(key, rawvar));
+  __exfwrite(*(data->_tmpfh), _e.get(key, rawvar));
 }
 
-void rpmctl::packagevars::on_eof(void *rawdata)
+void rpmctl::packagevars::on_eof(handle *data)
 {
-  vl_handle *data = static_cast<vl_handle*>(rawdata);
-  const std::string &tmpfile = data->tmpfh().tmpfile();
-  const std::string &cfgfile = data->cfgfile();
+  const std::string &tmpfile = data->_tmpfh.tmpfile();
+  const std::string &cfgfile = data->_cfgfile;
   if (std::rename(tmpfile.c_str(), cfgfile.c_str()) != 0)
     throw(std::runtime_error("could not move file "+ tmpfile +"to its destination: " + cfgfile));
   delete(data);
 }
 
-void rpmctl::packagevars::on_error(void *rawdata)
+void rpmctl::packagevars::on_error(handle *data)
 {
-  vl_handle *data = static_cast<vl_handle*>(rawdata);
   delete(data);
 }

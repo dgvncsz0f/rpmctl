@@ -30,11 +30,11 @@
 #include <rpmctl/env_bdb.hh>
 #include <rpmctl/packagevars.hh>
 
-int main(int, char *argv[])
+int main(int, const char *argv[])
 {
   rpmctl::env_bdb env(argv[1]);
   rpmctl::packagevars vl(env);
-  rpmctl::parser parser(vl);
+  rpmctl::parser<rpmctl::handle> parser(vl);
   parser.run(argv[2]);
   return(0);
 }
