@@ -31,9 +31,7 @@
 
 #include <unicode/unistr.h>
 
-#ifndef RPMCTL_MAXVARLEN
-#define RPMCTL_MAXVARLEN 1024
-#endif
+#include <map>
 
 namespace rpmctl
 {
@@ -82,6 +80,23 @@ namespace rpmctl
     virtual void on_error(T *) = 0;
   };
 
+  class memory_builder : public parser_events<UnicodeString>
+  {
+  public:
+    memory_builder(UnicodeString &, const std::map<UnicodeString,UnicodeString> &);
+    virtual ~memory_builder();
+
+    virtual UnicodeString *on_start(const std::string &);
+    virtual void on_text(const UnicodeString &, UnicodeString *);
+    virtual void on_variable(const UnicodeString &, UnicodeString *);
+    virtual void on_eof(UnicodeString *);
+    virtual void on_error(UnicodeString *);
+
+  private:
+    UnicodeString &_buffer;
+    std::map<UnicodeString,UnicodeString> _env;
+  };
+
   template<typename T>
   class parser
   {
@@ -95,6 +110,6 @@ namespace rpmctl
   };
 }
 
-#include "parser.cc.template"
+#include "parser.ht"
 
 #endif

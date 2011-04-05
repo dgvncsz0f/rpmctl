@@ -1,10 +1,9 @@
-/*
- * Copyright (c) 2010, Diego Souza
+/* Copyright (c) 2011, Diego Souza
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * 
  *   * Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
  *   * Redistributions in binary form must reproduce the above copyright notice,
@@ -13,7 +12,7 @@
  *   * Neither the name of the <ORGANIZATION> nor the names of its contributors
  *     may be used to endorse or promote products derived from this software
  *     without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,18 +25,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/parser.hh>
-#include <rpmctl/bdb_environment.hh>
-#include <rpmctl/stemplate.hh>
+#ifndef __TEST_RPMCTL_CONFIG__
+#define __TEST_RPMCTL_CONFIG__
 
-int main(int argc, const char *argv[])
+#include <boost/filesystem.hpp>
+
+namespace rpmctl_test
 {
-  rpmctl::bdb_environment env(argv[1]);
-  rpmctl::stemplate vl(env);
-  rpmctl::parser<rpmctl::stemplate_handler> parser(vl);
-  parser.run(argv[2]);
-  u_cleanup();
-  return(0);
+
+  boost::filesystem::path fixtures_path()
+  {
+    boost::filesystem::path me(boost::filesystem::system_complete(__FILE__));
+    return(me.remove_filename() / ".." / "fixtures");
+  }
+
 }
 
+#endif

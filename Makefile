@@ -29,12 +29,13 @@ BIN_FIND  = $(shell which find 2>/dev/null)
 BIN_TEST  = $(shell which test 2>/dev/null)
 BIN_TOUCH = $(shell which touch 2>/dev/null)
 
-INC_FILES  = $(wildcard src/main/rpmctl/*.hh) $(wildcard src/main/rpmctl/ui/*.hh) 
-SRC_FILES  = $(wildcard src/main/rpmctl/*.cc) $(wildcard src/main/rpmctl/ui/*.cc)
-OBJ_FILES  = $(addsuffix .o, $(basename $(SRC_FILES)))
+INC_FILES = $(wildcard src/main/rpmctl/*.hh) $(wildcard src/main/rpmctl/ui/*.hh) 
+TPL_FILES = $(wildcard src/main/rpmctl/*.ht)
+SRC_FILES = $(wildcard src/main/rpmctl/*.cc) $(wildcard src/main/rpmctl/ui/*.cc)
+OBJ_FILES = $(addsuffix .o, $(basename $(SRC_FILES)))
 
-INC_FILES_TEST = $(wildcard src/test/*.hh) $(wildcard src/test/ui/*.hh)
-SRC_FILES_TEST = $(wildcard src/test/*.cc) $(wildcard src/test/ui/*.cc)
+INC_FILES_TEST = $(wildcard src/test/test_rpmctl/*.hh)
+SRC_FILES_TEST = $(wildcard src/test/test_rpmctl/*.cc)
 OBJ_FILES_TEST = $(addsuffix .o, $(basename $(SRC_FILES_TEST)))
 
 TEST = run_tests
@@ -52,7 +53,7 @@ compile:
 
 build:
 	$(MAKE) __build_main
-	# $(MAKE) __build_test
+	$(MAKE) __build_test
 	$(MAKE) __build_slib
 
 tests:
@@ -85,19 +86,21 @@ endif
 %.cc : %.hh
 	$(BIN_TOUCH) $(@)
 
+$(OBJ_FILES): $(TPL_FILES)
+
 __compile_obj: $(OBJ_FILES)
 
 __compile_obj_test: CPPFLAGS += -I/usr/include/unittest++
 __compile_obj_test: $(OBJ_FILES_TEST)
 
-__build_main: CPPFLAGS += -licuio -licuuc -ldb_cxx
+__build_main: LDFLAGS += -licuio -licuuc -ldb_cxx
 __build_main: $(DIST)/bin/$(MAIN)
 
 __build_test: CPPFLAGS += -I/usr/include/unittest++
+__build_test: LDFLAGS  += -licuio -licuuc -ldb_cxx -lboost_filesystem -lboost_system -lunittest++
 __build_test: __compile_obj $(DIST)/bin/$(TEST)
 
 __build_slib: $(DIST)/lib/$(SLIB)
-
 
 ifeq ($(BIN_TEST),)
   $(error "test binary not found [define one using BIN_TEST variable]")
@@ -111,3 +114,6 @@ endif
 ifeq ($(BIN_FIND),)
   $(warning "find binary not found [define one using BIN_FIND variable]")
 endif
+
+.SUFFIXES: .ht
+

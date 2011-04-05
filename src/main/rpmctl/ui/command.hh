@@ -26,18 +26,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/parser.hh>
-#include <rpmctl/bdb_environment.hh>
-#include <rpmctl/stemplate.hh>
+#ifndef __RPMCTL_UI_COMMAND_HH__
+#define __RPMCTL_UI_COMMAND_HH__
 
-int main(int argc, const char *argv[])
+namespace rpmctl
 {
-  rpmctl::bdb_environment env(argv[1]);
-  rpmctl::stemplate vl(env);
-  rpmctl::parser<rpmctl::stemplate_handler> parser(vl);
-  parser.run(argv[2]);
-  u_cleanup();
-  return(0);
+
+  namespace ui
+  {
+
+    class command
+    {
+    public:
+      virtual ~command();
+      virtual void exec(int argc, const char *argv[]) = 0;
+    };
+
+  }
+
 }
 
+#endif

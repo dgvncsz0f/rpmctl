@@ -26,79 +26,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdexcept>
-#include <stdlib.h>
-#include <iostream>
-#include <unicode/ustdio.h>
 #include <unicode/ustream.h>
-#include <rpmctl/config.hh>
 #include <rpmctl/parser.hh>
-#include <rpmctl/scoped_fh.hh>
 
-typedef std::pair<int32_t,int32_t> int32t_pair;
-
-static
-void __exread(UnicodeString &out, UFILE *fh, size_t bufsz)
-{
-  UChar *buffer = new UChar[bufsz];
-  int32_t length = u_file_read(buffer, bufsz, fh);
-  if (length == -1)
-  {
-    delete[](buffer);
-    throw(std::runtime_error("error reading file"));
-  }
-  out.append(UnicodeString(buffer, length));
-  delete[](buffer);
-}
-
-static
-int32t_pair __findvar(const UnicodeString &txt)
-{
-  int32_t spos = txt.indexOf("$(");
-  int32_t epos = (spos==-1 ? -1 : txt.indexOf(")", spos));
-  return(int32t_pair(spos, epos));
-}
-
-template<typename T>
-rpmctl::parser_events<T>::~parser_events()
+rpmctl::memory_builder::~memory_builder()
 {}
 
-template<typename T>
-rpmctl::parser<T>::parser(parser_events<T> &e) :
-  _e(e)
+rpmctl::memory_builder::memory_builder(UnicodeString &buffer, const std::map<UnicodeString,UnicodeString> &e) :
+  _buffer(buffer),
+  _env(e)
 {}
 
-template<typename T>
-void rpmctl::parser<T>::run(const std::string &file)
+UnicodeString *rpmctl::memory_builder::on_start(const std::string &)
 {
-  T *data = _e.on_start(file);
-
-  try
-  {
-    rpmctl::scoped_fh fh(file, "r");
-
-    while (!u_feof(*fh))
-    {
-      UnicodeString txt;
-      __exread(txt, *fh, 2*RPMCTL_MAXVARLEN);
-      
-      int32t_pair pos = __findvar(txt);
-      if (pos.first==-1 || pos.second==-1)
-	_e.on_text(txt, data);
-      else
-      {
-	_e.on_text(txt.tempSubString(0, pos.first), data);
-	_e.on_variable(txt.tempSubString(pos.first+2, pos.second-pos.first-2), data);
-	_e.on_text(txt.tempSubString(pos.second+1), data);
-      }
-    }
-
-    _e.on_eof(data);
-  }
-  catch (const std::exception &)
-  {
-    _e.on_error(data);
-    throw;
-  }
+  return(&_buffer);
 }
 
+void rpmctl::memory_builder::on_text(const UnicodeString &txt, UnicodeString *buffer)
+{
+  buffer->append(txt);
+}
+
+void rpmctl::memory_builder::on_variable(const UnicodeString &txt, UnicodeString *buffer)
+{
+  std::map<UnicodeString,UnicodeString>::const_iterator it = _env.find(txt);
+  if (it != _env.end())
+    buffer->append(it->second);
+  else
+    buffer->append("$("+ txt +")");
+}
+
+void rpmctl::memory_builder::on_eof(UnicodeString *buffer)
+{
+  buffer->append("∎");
+}
+
+void rpmctl::memory_builder::on_error(UnicodeString *buffer)
+{
+  buffer->append("☠");
+}
