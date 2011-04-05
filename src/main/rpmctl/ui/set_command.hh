@@ -26,42 +26,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/ustream.h>
-#include <rpmctl/parser.hh>
+#ifndef __RPMCTL_UI_SET_COMMAND_HH__
+#define __RPMCTL_UI_SET_COMMAND_HH__
 
-rpmctl::memory_builder::~memory_builder()
-{}
+#include <rpmctl/ui/command.hh>
 
-rpmctl::memory_builder::memory_builder(UnicodeString &buffer, const std::map<UnicodeString,UnicodeString> &e) :
-  _buffer(buffer),
-  _env(e)
-{}
-
-UnicodeString *rpmctl::memory_builder::on_start(const std::string &)
+namespace rpmctl
 {
-  return(&_buffer);
+
+  namespace ui
+  {
+
+    class set_command : public command
+    {
+    public:
+      virtual ~set_command();
+
+      virtual void exec(int, const char **);
+    };
+
+  }
+
 }
 
-void rpmctl::memory_builder::on_text(const UnicodeString &txt, UnicodeString *buffer)
-{
-  buffer->append(txt);
-}
-
-void rpmctl::memory_builder::on_variable(const UnicodeString &txt, UnicodeString *buffer)
-{
-  std::map<UnicodeString,UnicodeString>::const_iterator it = _env.find(txt);
-  if (it != _env.end())
-    buffer->append(it->second);
-  else
-    buffer->append("$("+ txt +")");
-}
-
-void rpmctl::memory_builder::on_eof(UnicodeString *buffer)
-{
-  buffer->append("∎");
-}
-
-void rpmctl::memory_builder::on_error(UnicodeString *buffer)
-{
-  buffer->append("☠");
-}
+#endif

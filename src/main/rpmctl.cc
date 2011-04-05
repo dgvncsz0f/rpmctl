@@ -35,7 +35,7 @@ int main(int argc, const char *argv[])
 {
   rpmctl::bdb_environment env(argv[1]);
   rpmctl::stemplate vl(env);
-  rpmctl::parser<rpmctl::stemplate_handler> parser(vl);
+  rpmctl::parser<rpmctl::stemplate_handler> parser(vl, "package");
   parser.run(argv[2]);
   u_cleanup();
   return(0);

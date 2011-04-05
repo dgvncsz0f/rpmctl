@@ -34,8 +34,8 @@ TPL_FILES = $(wildcard src/main/rpmctl/*.ht)
 SRC_FILES = $(wildcard src/main/rpmctl/*.cc) $(wildcard src/main/rpmctl/ui/*.cc)
 OBJ_FILES = $(addsuffix .o, $(basename $(SRC_FILES)))
 
-INC_FILES_TEST = $(wildcard src/test/test_rpmctl/*.hh)
-SRC_FILES_TEST = $(wildcard src/test/test_rpmctl/*.cc)
+INC_FILES_TEST = $(wildcard src/test/rpmctl_test/*.hh) $(wildcard src/test/rpmctl_test/helpers/*.hh)
+SRC_FILES_TEST = $(wildcard src/test/rpmctl_test/*.cc) $(wildcard src/test/rpmctl_test/helpers/*.cc)
 OBJ_FILES_TEST = $(addsuffix .o, $(basename $(SRC_FILES_TEST)))
 
 TEST = run_tests
@@ -53,7 +53,6 @@ compile:
 
 build:
 	$(MAKE) __build_main
-	$(MAKE) __build_test
 	$(MAKE) __build_slib
 
 tests:

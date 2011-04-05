@@ -26,88 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdexcept>
-#include <stdlib.h>
-#include <iostream>
-#include <unicode/ustdio.h>
-#include <unicode/ustream.h>
-#include <rpmctl/config.hh>
-#include <rpmctl/parser.hh>
-#include <rpmctl/scoped_fh.hh>
+#include <rpmctl/ui/set_command.hh>
+#include <popt.h>
 
-static
-int32_t __exread(UnicodeString &out, UFILE *fh, size_t bufsz)
-{
-  UChar *buffer = new UChar[bufsz];
-  int32_t length = u_file_read(buffer, bufsz, fh);
-  if (length == -1)
-  {
-    delete[](buffer);
-    throw(std::runtime_error("error reading file"));
-  }
-  out.append(UnicodeString(buffer, length));
-  delete[](buffer);
-  return(length);
-}
-
-template<typename T>
-rpmctl::parser_events<T>::~parser_events()
+rpmctl::ui::set_command::~set_command()
 {}
 
-template<typename T>
-rpmctl::parser<T>::parser(parser_events<T> &e) :
-  _e(e)
-{}
-
-template<typename T>
-void rpmctl::parser<T>::run(const std::string &file)
+void rpmctl::ui::set_command::exec(int argc, const char *argv[])
 {
-  T *data = _e.on_start(file);
-
-  try
-  {
-    rpmctl::scoped_fh fh(file, "r");
-
-    UnicodeString txt;
-    while (!u_feof(*fh))
-    {
-      __exread(txt, *fh, RPMCTL_MAXVARLEN+3);
-
-      do
-      {
-	int32_t n = txt.indexOf("$(");
-	if (n==-1)
-	{
-	  _e.on_text(txt.tempSubString(0, txt.length()-1), data);
-	  txt.remove(0, txt.length()-1);
-	  break;
-	}
-	else
-	{
-	  int32_t m = txt.indexOf(")");
-	  if (m!=-1)
-	  {
-	    _e.on_text(txt.tempSubString(0, n), data);
-	    _e.on_variable(txt.tempSubString(n+2, m-n-2), data);
-	    txt.remove(0, m+1);
-	  }
-	  else
-	  {
-	    _e.on_text(txt.tempSubString(0, n), data);
-	    txt.remove(0, n);
-	    break;
-	  }
-	}
-      } while (true);
-    }
-
-    _e.on_text(txt, data);
-    _e.on_eof(data);
-  }
-  catch (const std::exception &)
-  {
-    _e.on_error(data);
-    throw;
-  }
+  
 }
-

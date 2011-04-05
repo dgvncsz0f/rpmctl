@@ -56,7 +56,7 @@ namespace rpmctl
 
     virtual void on_text(const UnicodeString &, stemplate_handler *);
 
-    virtual void on_variable(const UnicodeString &, stemplate_handler *);
+    virtual void on_variable(const UnicodeString &, const UnicodeString &, stemplate_handler *);
 
     virtual void on_eof(stemplate_handler *);
 

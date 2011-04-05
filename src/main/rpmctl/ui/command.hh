@@ -39,7 +39,8 @@ namespace rpmctl
     {
     public:
       virtual ~command();
-      virtual void exec(int argc, const char *argv[]) = 0;
+
+      virtual void exec(int, const char **) = 0;
     };
 
   }

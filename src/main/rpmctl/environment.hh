@@ -30,6 +30,7 @@
 #define __RPMCTL_ENVIRONMENT_HH__
 
 #include <unicode/unistr.h>
+#include <rpmctl/excepts.hh>
 
 namespace rpmctl
 {
@@ -39,11 +40,20 @@ namespace rpmctl
   public:
     virtual ~environment();
 
-    virtual UnicodeString get(const UnicodeString &key, const UnicodeString &defvalue) = 0;
+    virtual UnicodeString get(const UnicodeString &prefix, const UnicodeString &key, const UnicodeString &defval) throw(rpmctl_except) = 0;
 
-    virtual void put(const UnicodeString &key, const UnicodeString &val) = 0;
+    virtual void put(const UnicodeString &prefix, const UnicodeString &key, const UnicodeString &val) throw(rpmctl_except) = 0;
   };
 
+  class nil_env : public environment
+  {
+  public:
+    virtual ~nil_env();
+
+    virtual UnicodeString get(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
+
+    virtual void put(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
+  };
 }
 
 #endif

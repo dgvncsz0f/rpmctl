@@ -29,9 +29,29 @@
 #ifndef __RPMCTL_PARSER_HH__
 #define __RPMCTL_PARSER_HH__
 
+#include <stdexcept>
+#include <stdlib.h>
 #include <unicode/unistr.h>
+#include <unicode/ustdio.h>
+#include <unicode/ustream.h>
+#include <rpmctl/config.hh>
+#include <rpmctl/parser.hh>
+#include <rpmctl/scoped_fh.hh>
 
-#include <map>
+static
+int32_t __exread(UnicodeString &out, UFILE *fh, size_t bufsz)
+{
+  UChar *buffer = new UChar[bufsz];
+  int32_t length = u_file_read(buffer, bufsz, fh);
+  if (length == -1)
+  {
+    delete[](buffer);
+    throw(std::runtime_error("error reading file"));
+  }
+  out.append(UnicodeString(buffer, length));
+  delete[](buffer);
+  return(length);
+}
 
 namespace rpmctl
 {
@@ -39,7 +59,8 @@ namespace rpmctl
   class parser_events
   {
   public:
-    virtual ~parser_events();
+    virtual ~parser_events()
+    {}
 
     /*! This event is invoked when the parsing is started. The data
      *  this function returns in here is provided to all subsequent
@@ -61,10 +82,11 @@ namespace rpmctl
     /*! This event is invoked when a variable is found in a config
      *  file.
      *
-     *  \param The variable found
+     *  \param The prefix for this variable (usually the package name);  
+     *  \param The variable found;
      *  \param The data that `on_start' provided;
      */
-    virtual void on_variable(const UnicodeString &, T *) = 0;
+    virtual void on_variable(const UnicodeString &, const UnicodeString &, T *) = 0;
 
     /*! This event is invoked when the parser finishes reading the
      *  file successfully.
@@ -80,36 +102,69 @@ namespace rpmctl
     virtual void on_error(T *) = 0;
   };
 
-  class memory_builder : public parser_events<UnicodeString>
-  {
-  public:
-    memory_builder(UnicodeString &, const std::map<UnicodeString,UnicodeString> &);
-    virtual ~memory_builder();
-
-    virtual UnicodeString *on_start(const std::string &);
-    virtual void on_text(const UnicodeString &, UnicodeString *);
-    virtual void on_variable(const UnicodeString &, UnicodeString *);
-    virtual void on_eof(UnicodeString *);
-    virtual void on_error(UnicodeString *);
-
-  private:
-    UnicodeString &_buffer;
-    std::map<UnicodeString,UnicodeString> _env;
-  };
-
   template<typename T>
   class parser
   {
   public:
-    parser(parser_events<T> &);
+    parser(parser_events<T> &e, const UnicodeString &prefix) :
+      _e(e),
+      _prefix(prefix)
+    {}
 
-    void run(const std::string &);
+    void run(const std::string &file)
+    {
+      T *data = _e.on_start(file);
+
+      try
+      {
+	rpmctl::scoped_fh fh(file, "r");
+
+	UnicodeString txt;
+	while (!u_feof(*fh))
+	{
+	  __exread(txt, *fh, RPMCTL_MAXBUFSZ);
+	  do
+	  {
+	    int32_t n = txt.indexOf("$(");
+	    if (n==-1)
+	    {
+	      _e.on_text(txt.tempSubString(0, txt.length()-1), data);
+	      txt.remove(0, txt.length()-1);
+	      break;
+	    }
+	    else
+	    {
+	      int32_t m = txt.indexOf(")", n);
+	      if (m!=-1)
+	      {
+		_e.on_text(txt.tempSubString(0, n), data);
+		_e.on_variable(_prefix, txt.tempSubString(n+2, m-n-2), data);
+		txt.remove(0, m+1);
+	      }
+	      else
+	      {
+		_e.on_text(txt.tempSubString(0, n), data);
+		txt.remove(0, n);
+		break;
+	      }
+	    }
+	  } while (true);
+	}
+
+	_e.on_text(txt, data);
+	_e.on_eof(data);
+      }
+      catch (const std::exception &)
+      {
+	_e.on_error(data);
+	throw;
+      }
+    }
 
   private:
     parser_events<T> &_e;
+    const UnicodeString &_prefix;
   };
 }
-
-#include "parser.ht"
 
 #endif

@@ -1,10 +1,9 @@
-/*
- * Copyright (c) 2010, Diego Souza
+/* Copyright (c) 2011, Diego Souza
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * 
  *   * Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
  *   * Redistributions in binary form must reproduce the above copyright notice,
@@ -13,7 +12,7 @@
  *   * Neither the name of the <ORGANIZATION> nor the names of its contributors
  *     may be used to endorse or promote products derived from this software
  *     without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,15 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_CONFIG_HH__
-#define __RPMCTL_CONFIG_HH__
+#include <rpmctl_test/helpers/fixtures.hh>
 
-#ifndef RPMCTL_MAXBUFSZ
-#define RPMCTL_MAXBUFSZ 8192
-#endif
-
-#ifndef RPMCTL_BIGENDIAN
-#define RPMCTL_BIGENDIAN false
-#endif
-
-#endif
+boost::filesystem::path rpmctl_test::fixtures_path()
+{
+  boost::filesystem::path me(boost::filesystem::system_complete(__FILE__));
+  return(me.remove_filename() / ".." / ".." / "fixtures");
+}

@@ -28,8 +28,9 @@
 
 #include <unicode/unistr.h>
 #include <UnitTest++.h>
-#include <test_rpmctl/config.hh>
 #include <rpmctl/parser.hh>
+#include <rpmctl_test/helpers/fixtures.hh>
+#include <rpmctl_test/helpers/memory_builder.hh>
 
 namespace rpmctl_test
 {
@@ -40,8 +41,8 @@ namespace rpmctl_test
     std::map<UnicodeString,UnicodeString> env;
 
     boost::filesystem::path file = fixtures_path() / "file_without_variables";
-    rpmctl::memory_builder membuilder(buffer, env);
-    rpmctl::parser<UnicodeString> parser(membuilder);
+    memory_builder membuilder(buffer, env);
+    rpmctl::parser<UnicodeString> parser(membuilder, "rpmctl");
     parser.run(file.string());
 
     CHECK_EQUAL(-1, buffer.indexOf("$("));
@@ -53,13 +54,13 @@ namespace rpmctl_test
   {
     UnicodeString buffer;
     std::map<UnicodeString,UnicodeString> env;
-    env["version"] = "3";
-    env["date"]    = "29 June 2007";
-    env["copysym"] = "©";
+    env["rpmctl.version"] = "3";
+    env["rpmctl.date"]    = "29 June 2007";
+    env["rpmctl.copysym"] = "©";
 
     boost::filesystem::path file = fixtures_path() / "file_with_variables";
-    rpmctl::memory_builder membuilder(buffer, env);
-    rpmctl::parser<UnicodeString> parser(membuilder);
+    memory_builder membuilder(buffer, env);
+    rpmctl::parser<UnicodeString> parser(membuilder, "rpmctl");
     parser.run(file.string());
 
     CHECK_EQUAL(35146, buffer.length());
@@ -76,8 +77,8 @@ namespace rpmctl_test
     std::map<UnicodeString,UnicodeString> env;
 
     boost::filesystem::path file = fixtures_path() / "empty_file";
-    rpmctl::memory_builder membuilder(buffer, env);
-    rpmctl::parser<UnicodeString> parser(membuilder);
+    memory_builder membuilder(buffer, env);
+    rpmctl::parser<UnicodeString> parser(membuilder, "rpmctl");
     parser.run(file.string());
 
     CHECK_EQUAL(1, buffer.length());

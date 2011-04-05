@@ -1,9 +1,10 @@
-/* Copyright (c) 2011, Diego Souza
+/*
+ * Copyright (c) 2010, Diego Souza
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *   * Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
  *   * Redistributions in binary form must reproduce the above copyright notice,
@@ -12,7 +13,7 @@
  *   * Neither the name of the <ORGANIZATION> nor the names of its contributors
  *     may be used to endorse or promote products derived from this software
  *     without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -25,20 +26,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __TEST_RPMCTL_CONFIG__
-#define __TEST_RPMCTL_CONFIG__
+#ifndef __RPMCTL_TEST_HELPERS_MEMORY_BUILDER_HH__
+#define __RPMCTL_TEST_HELPERS_MEMORY_BUILDER_HH__
 
-#include <boost/filesystem.hpp>
+#include <map>
+#include <string>
+#include <unicode/unistr.h>
+#include <rpmctl/parser.hh>
 
 namespace rpmctl_test
 {
-
-  boost::filesystem::path fixtures_path()
+  class memory_builder : public rpmctl::parser_events<UnicodeString>
   {
-    boost::filesystem::path me(boost::filesystem::system_complete(__FILE__));
-    return(me.remove_filename() / ".." / "fixtures");
-  }
+  public:
+    memory_builder(UnicodeString &, const std::map<UnicodeString,UnicodeString> &);
+    virtual ~memory_builder();
 
+    virtual UnicodeString *on_start(const std::string &);
+    virtual void on_text(const UnicodeString &, UnicodeString *);
+    virtual void on_variable(const UnicodeString &, const UnicodeString &, UnicodeString *);
+    virtual void on_eof(UnicodeString *);
+    virtual void on_error(UnicodeString *);
+
+  private:
+    UnicodeString &_buffer;
+    std::map<UnicodeString,UnicodeString> _env;
+  };
 }
 
 #endif

@@ -26,62 +26,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdexcept>
-#include <cstdio>
-#include <unicode/ustdio.h>
-#include <rpmctl/stemplate.hh>
-#include <rpmctl/scoped_tmpfh.hh>
+#ifndef __RPMCTL_MACHINE_HH__
+#define __RPMCTL_MACHINE_HH__
 
-static
-void __exfwrite(UFILE *fh, const UnicodeString &txt)
+#include <cstdlib>
+#include <cstring>
+#include <inttypes.h>
+#include <unicode/unistr.h>
+
+namespace rpmctl
 {
-  int32_t length = txt.length();
-  while (length > 0)
+  typedef char bytestring;
+
+  class machine
   {
-    int32_t offset = txt.length() - length;
-    const UChar *buffer = txt.getBuffer();
-    length -= u_file_write(buffer + offset, length, fh);
-  }
+  public:
+    static size_t write(bytestring *b, int8_t n);
+
+    static int8_t read_int8t(const bytestring *b);
+
+    static size_t write(bytestring *b, int16_t n);
+
+    static size_t write(bytestring *b, int32_t n);
+
+    static size_t write(bytestring *b, const char *s, size_t len);
+
+    static size_t write(bytestring *b, const UnicodeString &s);
+
+    static int16_t read_int16t(const bytestring *b);
+
+    static int32_t read_int32t(const bytestring *b);
+
+    static size_t read_string(char *s, const bytestring *b);
+
+    static size_t read_string(UnicodeString &s, const bytestring *b);
+  };
+
 }
 
-rpmctl::stemplate_handler::stemplate_handler(const std::string cfgfile) :
-  _cfgfile(cfgfile),
-  _tmpfh()
-{}
-
-rpmctl::stemplate::stemplate(environment &e) :
-  _e(e)
-{}
-
-rpmctl::stemplate::~stemplate()
-{}
-
-rpmctl::stemplate_handler *rpmctl::stemplate::on_start(const std::string &cfgfile)
-{
-  return(new stemplate_handler(cfgfile));
-}
-
-void rpmctl::stemplate::on_text(const UnicodeString &txt, stemplate_handler *data)
-{
-  __exfwrite(*(data->_tmpfh), txt);
-}
-
-void rpmctl::stemplate::on_variable(const UnicodeString &prefix, const UnicodeString &key, stemplate_handler *data)
-{
-  UnicodeString rawvar = "$(" + key +")";
-  __exfwrite(*(data->_tmpfh), _e.get(prefix, key, rawvar));
-}
-
-void rpmctl::stemplate::on_eof(stemplate_handler *data)
-{
-  const std::string &tmpfile = data->_tmpfh.tmpfile();
-  const std::string &cfgfile = data->_cfgfile;
-  if (std::rename(tmpfile.c_str(), cfgfile.c_str()) != 0)
-    throw(std::runtime_error("could not move file "+ tmpfile +"to its destination: " + cfgfile));
-  delete(data);
-}
-
-void rpmctl::stemplate::on_error(stemplate_handler *data)
-{
-  delete(data);
-}
+#endif

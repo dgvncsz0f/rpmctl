@@ -30,3 +30,15 @@
 
 rpmctl::environment::~environment()
 {}
+
+rpmctl::nil_env::~nil_env()
+{}
+
+UnicodeString rpmctl::nil_env::get(const UnicodeString &, const UnicodeString &, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
+{
+  return(defval);
+}
+
+void rpmctl::nil_env::put(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl::rpmctl_except)
+{
+}

@@ -30,8 +30,9 @@
 #define __RPMCTL_BDB_ENVIRONMENT_HH__
 
 #include <string>
-#include <unicode/unistr.h>
 #include <db_cxx.h>
+#include <unicode/unistr.h>
+#include <rpmctl/machine.hh>
 #include <rpmctl/environment.hh>
 #include <rpmctl/excepts.hh>
 
@@ -43,12 +44,13 @@ namespace rpmctl
     bdb_environment(const std::string &) throw(rpmctl_except);
     virtual ~bdb_environment();
 
-    virtual UnicodeString get(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
-    virtual void put(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
+    virtual UnicodeString get(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
+    virtual void put(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
 
   private:
     DbEnv _env;
-    Db *_db;
+    Db *_master;
+    Db *_secondary;
   };
 }
 
