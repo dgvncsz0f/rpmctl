@@ -44,8 +44,20 @@ Testing
 -------
   The same as the main program plus:
 
-  * boost_filesystem: http://www.boost.org/doc/libs/
-  * unittest++: http://unittest-cpp.sourceforge.net/
+  * boost_filesystem [http://www.boost.org/doc/libs/]
+  * unittest++ [http://unittest-cpp.sourceforge.net/]
+
+Compiling
+=========
+
+  $ make build
+
+Binaries will be available under `dist/bin` directory.
+
+Testing
+=======
+
+  $ make tests
 
 TODO
 ====
