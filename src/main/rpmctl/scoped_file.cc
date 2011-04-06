@@ -26,28 +26,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_SCOPED_FH_HH__
-#define __RPMCTL_SCOPED_FH_HH__
+#include <unistd.h>
+#include <rpmctl/scoped_file.hh>
 
-#include <unicode/unistr.h>
-#include <unicode/ustdio.h>
+rpmctl::scoped_file::scoped_file(const std::string &file) :
+  _file(file)
+{}
 
-namespace rpmctl
+const std::string &rpmctl::scoped_file::operator*() const
 {
-  class scoped_fh
-  {
-  public:
-    scoped_fh(const std::string &file, const std::string &mode);
-    scoped_fh();
-    virtual ~scoped_fh();
-
-    void open(const std::string &file, const std::string &mode);
-
-    UFILE *operator*() const;
-
-  private:
-    UFILE *_fh;
-  };
+  return(_file);
 }
 
-#endif
+rpmctl::scoped_file::~scoped_file()
+{
+  unlink(_file.c_str());
+}

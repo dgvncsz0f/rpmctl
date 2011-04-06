@@ -40,7 +40,6 @@ OBJ_FILES_TEST = $(addsuffix .o, $(basename $(SRC_FILES_TEST)))
 
 TEST = run_tests
 MAIN = rpmctl
-SLIB = librpmctl.so
 
 DIST = $(CURDIR)/dist
 
@@ -49,11 +48,9 @@ override LDFLAGS  +=
 
 compile:
 	$(MAKE) __compile_obj
-	$(MAKE) __compile_obj_test
 
 build:
 	$(MAKE) __build_main
-	$(MAKE) __build_slib
 
 tests:
 	@$(MAKE) __build_test
@@ -70,10 +67,6 @@ clean:
 	rm -rf $(DIST)
 endif
 
-%/lib/$(SLIB): $(OBJ_FILES)
-	$(BIN_TEST) -d $(dir $(@)) || mkdir -p $(dir $(@))
-	$(CXX) -shared -Wl,-soname,$(SLIB) -o$(@) $(^) $(LDFLAGS)
-
 %/bin/$(TEST): src/test/run_tests.cc $(OBJ_FILES) $(OBJ_FILES_TEST)
 	$(BIN_TEST) -d $(dir $(@)) || mkdir -p $(dir $(@))
 	$(CXX) $(CPPFLAGS) -o$(@) $(^) $(LDFLAGS)
@@ -89,17 +82,12 @@ $(OBJ_FILES): $(TPL_FILES)
 
 __compile_obj: $(OBJ_FILES)
 
-__compile_obj_test: CPPFLAGS += -I/usr/include/unittest++
-__compile_obj_test: $(OBJ_FILES_TEST)
-
 __build_main: LDFLAGS += -licuio -licuuc -ldb_cxx
 __build_main: $(DIST)/bin/$(MAIN)
 
 __build_test: CPPFLAGS += -I/usr/include/unittest++
 __build_test: LDFLAGS  += -licuio -licuuc -ldb_cxx -lboost_filesystem -lboost_system -lunittest++
 __build_test: __compile_obj $(DIST)/bin/$(TEST)
-
-__build_slib: $(DIST)/lib/$(SLIB)
 
 ifeq ($(BIN_TEST),)
   $(error "test binary not found [define one using BIN_TEST variable]")

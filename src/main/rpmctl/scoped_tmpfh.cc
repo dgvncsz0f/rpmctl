@@ -27,27 +27,28 @@
  */
 
 #include <stdexcept>
-#include <unistd.h>
 #include <stdlib.h>
 #include <unicode/ustdio.h>
 #include <rpmctl/scoped_tmpfh.hh>
 
-rpmctl::scoped_tmpfh::scoped_tmpfh()
+rpmctl::scoped_tmpfh::scoped_tmpfh() :
+  _tmpfile(NULL)
 {
   char tmpfile[] = ".rpmctl.XXXXXX";
   if (mkstemp(tmpfile) == -1)
     throw(std::runtime_error("could not create temporary file"));
 
-  _tmpfile = tmpfile;
-  open(tmpfile, "w");
+  _tmpfile = new rpmctl::scoped_file(tmpfile);
+  open(**_tmpfile, "w");
 }
 
 rpmctl::scoped_tmpfh::~scoped_tmpfh()
 {
-  unlink(_tmpfile.c_str());
+  if (_tmpfile != NULL)
+    delete(_tmpfile);
 }
 
 const std::string &rpmctl::scoped_tmpfh::tmpfile() const
 {
-  return(_tmpfile);
+  return((**_tmpfile));
 }

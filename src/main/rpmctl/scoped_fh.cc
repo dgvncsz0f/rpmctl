@@ -27,7 +27,6 @@
  */
 
 #include <stdexcept>
-#include <unicode/ustdio.h>
 #include <rpmctl/scoped_fh.hh>
 
 rpmctl::scoped_fh::scoped_fh(const std::string &file, const std::string &mode) :

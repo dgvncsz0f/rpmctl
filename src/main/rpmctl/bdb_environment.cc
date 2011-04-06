@@ -34,11 +34,11 @@
 #include <rpmctl/bdb_environment.hh>
 
 static
-size_t __serialize(rpmctl::bytestring *buffer, const UnicodeString &prefix, const UnicodeString &varname)
+size_t __serialize(rpmctl::bytestring *buffer, const UnicodeString &ns, const UnicodeString &varname)
 {
-  size_t prefixlen  = rpmctl::machine::write(buffer, prefix);
-  size_t varnamelen = rpmctl::machine::write(buffer==NULL ? NULL : buffer+prefixlen, varname);
-  return(prefixlen + varnamelen);
+  size_t nslen      = rpmctl::machine::write(buffer, ns);
+  size_t varnamelen = rpmctl::machine::write(buffer==NULL ? NULL : buffer+nslen, varname);
+  return(nslen + varnamelen);
 }
 
 static
@@ -51,13 +51,13 @@ size_t __serialize(rpmctl::bytestring *buffer, const UnicodeString &s)
 static
 std::pair<UnicodeString,UnicodeString> __unserialize_tuple(const rpmctl::bytestring *buffer)
 {
-  UnicodeString prefix;
-  size_t offset = rpmctl::machine::read_string(prefix, buffer);
+  UnicodeString ns;
+  size_t offset = rpmctl::machine::read_string(ns, buffer);
 
   UnicodeString varname;
   rpmctl::machine::read_string(varname, buffer+offset);
 
-  return(std::pair<UnicodeString,UnicodeString>(prefix, varname));
+  return(std::pair<UnicodeString,UnicodeString>(ns, varname));
 }
 
 static
@@ -92,11 +92,11 @@ static
 int __index_package(Db *, const Dbt *key, const Dbt *, Dbt *skey)
 {
   char *buffer = static_cast<char*>(key->get_data());
-  UnicodeString prefix = __unserialize_tuple(buffer).first;
+  UnicodeString ns = __unserialize_tuple(buffer).first;
 
-  int32_t skeylength = __serialize(NULL, prefix);
+  int32_t skeylength = __serialize(NULL, ns);
   char *skeybuffer   = static_cast<char*>(std::malloc(skeylength));
-  __serialize(skeybuffer, prefix);
+  __serialize(skeybuffer, ns);
 
   skey->set_flags(DB_DBT_APPMALLOC);
   skey->set_data(skeybuffer);
@@ -164,11 +164,11 @@ rpmctl::bdb_environment::~bdb_environment()
   delete(_master);
 }
 
-void rpmctl::bdb_environment::put(const UnicodeString &prefix, const UnicodeString &key, const UnicodeString &val) throw(rpmctl::rpmctl_except)
+void rpmctl::bdb_environment::put(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &val) throw(rpmctl::rpmctl_except)
 {
-  int32_t keylength = __serialize(NULL, prefix, key);
+  int32_t keylength = __serialize(NULL, ns, key);
   std::auto_ptr<myautoptr_adapter> keybuffer(new myautoptr_adapter(new char[keylength]));
-  __serialize(**keybuffer, prefix, key);
+  __serialize(**keybuffer, ns, key);
 
   int32_t vallength = __serialize(NULL, val);
   std::auto_ptr<myautoptr_adapter> valbuffer(new myautoptr_adapter(new char[vallength]));
@@ -189,14 +189,14 @@ void rpmctl::bdb_environment::put(const UnicodeString &prefix, const UnicodeStri
   }
 }
 
-UnicodeString rpmctl::bdb_environment::get(const UnicodeString &prefix, const UnicodeString &key, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
+UnicodeString rpmctl::bdb_environment::get(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
 {
   std::auto_ptr<myautoptr_adapter> keybuffer(NULL);
   std::auto_ptr<myautoptr_adapter> valbuffer(NULL);
 
-  int32_t keylength = __serialize(NULL, prefix, key);
+  int32_t keylength = __serialize(NULL, ns, key);
   keybuffer.reset(new myautoptr_adapter(new char[keylength]));
-  __serialize(**keybuffer, prefix, key);
+  __serialize(**keybuffer, ns, key);
 
   Dbt dbkey(**keybuffer, keylength);
   Dbt dbval;

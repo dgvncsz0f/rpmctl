@@ -31,6 +31,7 @@
 
 #include <string>
 #include <unicode/unistr.h>
+#include <rpmctl/scoped_file.hh>
 #include <rpmctl/scoped_fh.hh>
 
 namespace rpmctl
@@ -44,7 +45,7 @@ namespace rpmctl
     const std::string &tmpfile() const;
 
   protected:
-    std::string _tmpfile;
+    scoped_file *_tmpfile;
   };
 }
 

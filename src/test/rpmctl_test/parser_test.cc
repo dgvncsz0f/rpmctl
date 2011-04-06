@@ -29,7 +29,7 @@
 #include <unicode/unistr.h>
 #include <UnitTest++.h>
 #include <rpmctl/parser.hh>
-#include <rpmctl_test/helpers/fixtures.hh>
+#include <rpmctl_test/helpers/file_utils.hh>
 #include <rpmctl_test/helpers/memory_builder.hh>
 
 namespace rpmctl_test

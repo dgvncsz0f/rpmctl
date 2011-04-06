@@ -25,10 +25,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rpmctl_test/helpers/fixtures.hh>
+#include <sys/stat.h>
+#include <rpmctl/scoped_fh.hh>
+#include <rpmctl_test/helpers/file_utils.hh>
 
 boost::filesystem::path rpmctl_test::fixtures_path()
 {
   boost::filesystem::path me(boost::filesystem::system_complete(__FILE__));
   return(me.remove_filename() / ".." / ".." / "fixtures");
+}
+
+UnicodeString rpmctl_test::read_file(const std::string &file)
+{
+  UChar buffer[1024];
+  UnicodeString txt;
+  rpmctl::scoped_fh fh(file, "r");
+  while (! u_feof(*fh))
+  {
+    int32_t length = u_file_read(buffer, sizeof(buffer), *fh);
+    txt.append(UnicodeString(buffer, length));
+  }
+  return(txt);
+}
+
+bool rpmctl_test::file_exists(const std::string &file)
+{
+  struct stat x;
+  return(stat(file.c_str(), &x) == 0);
 }

@@ -66,10 +66,10 @@ void rpmctl::stemplate::on_text(const UnicodeString &txt, stemplate_handler *dat
   __exfwrite(*(data->_tmpfh), txt);
 }
 
-void rpmctl::stemplate::on_variable(const UnicodeString &prefix, const UnicodeString &key, stemplate_handler *data)
+void rpmctl::stemplate::on_variable(const UnicodeString &ns, const UnicodeString &key, stemplate_handler *data)
 {
-  UnicodeString rawvar = "$(" + key +")";
-  __exfwrite(*(data->_tmpfh), _e.get(prefix, key, rawvar));
+  UnicodeString rawvar = "$(" + ns + "::" + key +")";
+  __exfwrite(*(data->_tmpfh), _e.get(ns, key, rawvar));
 }
 
 void rpmctl::stemplate::on_eof(stemplate_handler *data)
