@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// TODO:big/little endian platform compatibility
+
 #include <rpmctl/machine.hh>
 
 size_t rpmctl::machine::write(char *b, int8_t n)
@@ -85,14 +87,14 @@ int16_t rpmctl::machine::read_int16t(const bytestring *b)
 {
   int8_t one = read_int8t(b);
   int8_t two = read_int8t(b+1);
-  return(one | ((two << 8) & 0xFF));
+  return((one & 0xFF) | (two << 8));
 }
 
 int32_t rpmctl::machine::read_int32t(const bytestring *b)
 {
   int16_t one = read_int16t(b);
   int16_t two = read_int16t(b+2);
-  return(one | ((two << 16) & 0xFFFF));
+  return((one & 0xFFFF) | (two << 16));
 }
 
 size_t rpmctl::machine::read_string(char *s, const bytestring *b)

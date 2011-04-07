@@ -26,46 +26,63 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_MACHINE_HH__
-#define __RPMCTL_MACHINE_HH__
-
 #include <cstdlib>
 #include <cstring>
-#include <inttypes.h>
 #include <unicode/unistr.h>
+#include <UnitTest++.h>
+#include <rpmctl/machine.hh>
 
-namespace rpmctl
+namespace rpmctl_test
 {
-  typedef char bytestring;
-  
-  /*! This class provides minimalist serialization primitives.
-   *
-   * TODO:provide unsigned int versions
-   */
-  class machine
+
+  TEST(rw_for_int8_t_type)
   {
-  public:
-    static size_t write(bytestring *b, int8_t n);
+    char buffer[1];
+    for (int k=0; k<100; k+=1)
+    {
+      int8_t n = static_cast<int8_t>(std::rand());
+      rpmctl::machine::write(buffer, n);
+      CHECK_EQUAL(n, rpmctl::machine::read_int8t(buffer));
+    }
+  }
 
-    static int8_t read_int8t(const bytestring *b);
+  TEST(rw_for_int16_t_type)
+  {
+    char buffer[2];
+    for (int k=0; k<100; k+=1)
+    {
+      int16_t n = static_cast<int16_t>(std::rand());
+      rpmctl::machine::write(buffer, n);
+      CHECK_EQUAL(n, rpmctl::machine::read_int16t(buffer));
+    }
+  }
 
-    static size_t write(bytestring *b, int16_t n);
+  TEST(rw_for_int32_t_type)
+  {
+    char buffer[4];
+    for (int k=0; k<100; k+=1)
+    {
+      int32_t n = static_cast<int32_t>(std::rand());
+      rpmctl::machine::write(buffer, n);
+      CHECK_EQUAL(n, rpmctl::machine::read_int32t(buffer));
+    }
+  }
 
-    static size_t write(bytestring *b, int32_t n);
+  TEST(rw_for_cstr_type)
+  {
+    char buffer[1024];
+    char rbuffer[1024];
+    rpmctl::machine::write(buffer, static_cast<const char *>("foobar"), std::strlen("foobar")+1);
+    rpmctl::machine::read_string(rbuffer, buffer);
+    CHECK_EQUAL(0, std::strcmp("foobar", rbuffer));
+  }
 
-    static size_t write(bytestring *b, const char *s, size_t len);
-
-    static size_t write(bytestring *b, const UnicodeString &s);
-
-    static int16_t read_int16t(const bytestring *b);
-
-    static int32_t read_int32t(const bytestring *b);
-
-    static size_t read_string(char *s, const bytestring *b);
-
-    static size_t read_string(UnicodeString &s, const bytestring *b);
-  };
-
+  TEST(rw_for_ustr_type)
+  {
+    char buffer[1024];
+    UnicodeString rbuffer;
+    rpmctl::machine::write(buffer, UnicodeString("foobar"));
+    rpmctl::machine::read_string(rbuffer, buffer);
+    CHECK(UnicodeString("foobar") == rbuffer);
+  }
 }
-
-#endif
