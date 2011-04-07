@@ -82,11 +82,26 @@ namespace rpmctl
     /*! This event is invoked when a variable is found in a config
      *  file.
      *
-     *  \param The prefix for this variable (usually the package name);  
+     *  \param The ns for this variable (usually the package name);  
      *  \param The variable found;
      *  \param The data that `on_start' provided;
      */
     virtual void on_variable(const UnicodeString &, const UnicodeString &, T *) = 0;
+
+    /*! This event is invoked when a qualified variable is found in a
+     *  config file. For example $(foobar::foobar) is a qualified
+     *  variable.
+     *
+     *  \param The ns for this variable (usually the package name);  
+     *  \param The variable found;
+     *  \param The data that `on_start' provided;
+     *
+     *  N.B.: The default implementation invokes on_variable.
+     */
+    virtual void on_qualified_variable(const UnicodeString &ns, const UnicodeString &key, T *data)
+    {
+      return(on_variable(ns, key, data));
+    }
 
     /*! This event is invoked when the parser finishes reading the
      *  file successfully.
@@ -106,9 +121,9 @@ namespace rpmctl
   class parser
   {
   public:
-    parser(parser_events<T> &e, const UnicodeString &prefix) :
+    parser(parser_events<T> &e, const UnicodeString &ns) :
       _e(e),
-      _prefix(prefix)
+      _ns(ns)
     {}
 
     void run(const std::string &file)
@@ -137,8 +152,9 @@ namespace rpmctl
 	      int32_t m = txt.indexOf(")", n);
 	      if (m!=-1)
 	      {
+		// TODO:qualified variables
 		_e.on_text(txt.tempSubString(0, n), data);
-		_e.on_variable(_prefix, txt.tempSubString(n+2, m-n-2), data);
+		_e.on_variable(_ns, txt.tempSubString(n+2, m-n-2), data);
 		txt.remove(0, m+1);
 	      }
 	      else
@@ -163,7 +179,7 @@ namespace rpmctl
 
   private:
     parser_events<T> &_e;
-    const UnicodeString &_prefix;
+    const UnicodeString &_ns;
   };
 }
 

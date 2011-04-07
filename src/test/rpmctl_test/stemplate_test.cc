@@ -86,6 +86,23 @@ namespace rpmctl_test
 
     UnicodeString txt = rpmctl_test::read_file(*file);
     CHECK(rpmctl_test::file_exists(*file) == true);
+    CHECK(txt == "$(foobar)");
+  }
+
+  TEST(on_qualified_variable_should_write_the_original_variable_if_it_cant_find_it_onto_environment)
+  {
+    rpmctl::scoped_file file(".stemplate_test#2");
+
+    rpmctl::nil_env env;
+    rpmctl::stemplate stemplate(env);
+    rpmctl::stemplate_handler *handler = NULL;
+
+    handler = stemplate.on_start(*file);
+    stemplate.on_qualified_variable("namespace", "foobar", handler);
+    stemplate.on_eof(handler);
+
+    UnicodeString txt = rpmctl_test::read_file(*file);
+    CHECK(rpmctl_test::file_exists(*file) == true);
     CHECK(txt == "$(namespace::foobar)");
   }
 

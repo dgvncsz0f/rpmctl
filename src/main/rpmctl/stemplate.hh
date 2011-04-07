@@ -58,6 +58,8 @@ namespace rpmctl
 
     virtual void on_variable(const UnicodeString &, const UnicodeString &, stemplate_handler *);
 
+    virtual void on_qualified_variable(const UnicodeString &, const UnicodeString &, stemplate_handler *);
+
     virtual void on_eof(stemplate_handler *);
 
     virtual void on_error(stemplate_handler *);
