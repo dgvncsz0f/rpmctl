@@ -82,11 +82,11 @@ $(OBJ_FILES): $(TPL_FILES)
 
 __compile_obj: $(OBJ_FILES)
 
-__build_main: LDFLAGS += -licuio -licuuc -ldb_cxx
+__build_main: LDFLAGS += -lpopt -licuio -licuuc -ldb_cxx
 __build_main: $(DIST)/bin/$(MAIN)
 
 __build_test: CPPFLAGS += -I/usr/include/unittest++
-__build_test: LDFLAGS  += -licuio -licuuc -ldb_cxx -lboost_filesystem -lboost_system -lunittest++
+__build_test: LDFLAGS  += -lpopt -licuio -licuuc -ldb_cxx -lboost_filesystem -lboost_system -lunittest++
 __build_test: __compile_obj $(DIST)/bin/$(TEST)
 
 ifeq ($(BIN_TEST),)

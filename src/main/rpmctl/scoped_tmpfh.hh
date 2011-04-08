@@ -30,7 +30,6 @@
 #define __RPMCTL_SCOPED_TMPFH_HH__
 
 #include <string>
-#include <unicode/unistr.h>
 #include <rpmctl/scoped_file.hh>
 #include <rpmctl/scoped_fh.hh>
 
@@ -40,6 +39,7 @@ namespace rpmctl
   {
   public:
     scoped_tmpfh();
+    scoped_tmpfh(const std::string &basedir);
     virtual ~scoped_tmpfh();
 
     const std::string &tmpfile() const;

@@ -26,8 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <libgen.h>
 #include <stdexcept>
 #include <cstdio>
+#include <string.h>
 #include <unicode/ustdio.h>
 #include <rpmctl/stemplate.hh>
 #include <rpmctl/scoped_tmpfh.hh>
@@ -46,8 +48,27 @@ void __exfwrite(UFILE *fh, const UnicodeString &txt)
 
 rpmctl::stemplate_handler::stemplate_handler(const std::string cfgfile) :
   _cfgfile(cfgfile),
-  _tmpfh()
-{}
+  _tmpfh(NULL)
+{
+  char *filedup = strdup(cfgfile.c_str());
+  char *basedir = dirname(filedup);
+  try
+  {
+    _tmpfh = new rpmctl::scoped_tmpfh(basedir);
+    free(filedup);
+  }
+  catch (const std::exception &)
+  {
+    free(filedup);
+    throw;
+  }
+}
+
+rpmctl::stemplate_handler::~stemplate_handler()
+{
+  if (_tmpfh != NULL)
+    delete(_tmpfh);
+}
 
 rpmctl::stemplate::stemplate(environment &e) :
   _e(e)
@@ -63,24 +84,24 @@ rpmctl::stemplate_handler *rpmctl::stemplate::on_start(const std::string &cfgfil
 
 void rpmctl::stemplate::on_text(const UnicodeString &txt, stemplate_handler *data)
 {
-  __exfwrite(*(data->_tmpfh), txt);
+  __exfwrite(**(data->_tmpfh), txt);
 }
 
 void rpmctl::stemplate::on_qualified_variable(const UnicodeString &ns, const UnicodeString &key, stemplate_handler *data)
 {
   UnicodeString rawvar = "$(" + ns + "::" + key +")";
-  __exfwrite(*(data->_tmpfh), _e.get(ns, key, rawvar));
+  __exfwrite(**(data->_tmpfh), _e.get(ns, key, rawvar));
 }
 
 void rpmctl::stemplate::on_variable(const UnicodeString &ns, const UnicodeString &key, stemplate_handler *data)
 {
   UnicodeString rawvar = "$(" + key +")";
-  __exfwrite(*(data->_tmpfh), _e.get(ns, key, rawvar));
+  __exfwrite(**(data->_tmpfh), _e.get(ns, key, rawvar));
 }
 
 void rpmctl::stemplate::on_eof(stemplate_handler *data)
 {
-  const std::string &tmpfile = data->_tmpfh.tmpfile();
+  const std::string &tmpfile = data->_tmpfh->tmpfile();
   const std::string &cfgfile = data->_cfgfile;
   if (std::rename(tmpfile.c_str(), cfgfile.c_str()) != 0)
     throw(std::runtime_error("could not move file "+ tmpfile +"to its destination: " + cfgfile));

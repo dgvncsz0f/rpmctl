@@ -26,16 +26,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/ui/command.hh>
+#include <popt.h>
 #include <rpmctl/ui/router.hh>
+#include <rpmctl/ui/command.hh>
 
-int main(int argc, const char *argv[])
+rpmctl::ui::router::router()
+{}
+
+rpmctl::ui::router::~router()
+{}
+
+rpmctl::ui::command *rpmctl::ui::router::lookup(int argc, const char *argv[])
 {
-  rpmctl::ui::router router;
-  rpmctl::ui::command *command = router.lookup(argc, argv);
+  int version;
+  struct poptOption options[] = { { "version",
+				    '\0',
+				    POPT_ARG_NONE,
+				    &version,
+				    0,
+				    "version and license of this software",
+				    NULL
+                                  },
+				  POPT_AUTOHELP
+				  POPT_TABLEEND
+                                };
 
-  u_cleanup();
-  return(0);
+  poptContext optctx = poptGetContext(argv[0], argc, argv, options, 0);
+  poptSetOtherOptionHelp(optctx, "[OPTION...] <command> [ARG...]");
+
+  if (argc < 2)
+  {
+    poptPrintUsage(optctx, stderr, 0);
+  }
+  else
+  {
+    int rc = poptGetNextOpt(optctx);
+  }
+
+  poptFreeContext(optctx);
+  return(NULL);
 }
-

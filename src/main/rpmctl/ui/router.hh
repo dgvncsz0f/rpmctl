@@ -26,16 +26,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/ui/command.hh>
-#include <rpmctl/ui/router.hh>
+#ifndef __RPMCTL_UI_ROUTER_HH__
+#define __RPMCTL_UI_ROUTER_HH__
 
-int main(int argc, const char *argv[])
+namespace rpmctl
 {
-  rpmctl::ui::router router;
-  rpmctl::ui::command *command = router.lookup(argc, argv);
 
-  u_cleanup();
-  return(0);
+  namespace ui
+  {
+    class command;
+
+    class router
+    {
+    public:
+      router();
+      ~router();
+
+      command *lookup(int argc, const char *argv[]);
+    };
+
+  }
+
 }
 
+#endif

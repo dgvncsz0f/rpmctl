@@ -41,9 +41,10 @@ namespace rpmctl
   struct stemplate_handler
   {
     stemplate_handler(const std::string cfgfile);
+    ~stemplate_handler();
     
     std::string _cfgfile;
-    scoped_tmpfh _tmpfh;
+    scoped_tmpfh *_tmpfh;
   };
 
   class stemplate : public parser_events<stemplate_handler>

@@ -26,19 +26,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
 #include <stdexcept>
 #include <stdlib.h>
 #include <unicode/ustdio.h>
 #include <rpmctl/scoped_tmpfh.hh>
 
+#include <iostream> // TODO:remove
+
+rpmctl::scoped_file *__mktemp(const std::string &basedir)
+{
+  std::string stmpfile = basedir + "/" + ".rpmctl.XXXXXX";
+  char *tmpfile = strdup(stmpfile.c_str());
+  if (mkstemp(tmpfile) == -1)
+  {
+    free(tmpfile);
+    throw(std::runtime_error("could not create temporary file"));
+  }
+  rpmctl::scoped_file *sf = new rpmctl::scoped_file(tmpfile);
+  free(tmpfile);
+  return(sf);
+}
+
 rpmctl::scoped_tmpfh::scoped_tmpfh() :
   _tmpfile(NULL)
 {
-  char tmpfile[] = ".rpmctl.XXXXXX";
-  if (mkstemp(tmpfile) == -1)
-    throw(std::runtime_error("could not create temporary file"));
+  _tmpfile = __mktemp(".");
+  open(**_tmpfile, "w");
+}
 
-  _tmpfile = new rpmctl::scoped_file(tmpfile);
+rpmctl::scoped_tmpfh::scoped_tmpfh(const std::string &basedir) :
+  _tmpfile(NULL)
+{
+  _tmpfile = __mktemp(basedir);
   open(**_tmpfile, "w");
 }
 
