@@ -152,9 +152,20 @@ namespace rpmctl
 	      int32_t m = txt.indexOf(")", n);
 	      if (m!=-1)
 	      {
-		// TODO:qualified variables
 		_e.on_text(txt.tempSubString(0, n), data);
-		_e.on_variable(_ns, txt.tempSubString(n+2, m-n-2), data);
+
+		UnicodeString var = txt.tempSubString(n+2, m-n-2);
+		int32_t pos       = var.indexOf("::");
+		if (pos != -1) {
+		  _e.on_qualified_variable( txt.tempSubString(n+2, pos),
+					    txt.tempSubString(n+4+pos, m-n-4-pos),
+					    data
+		                          );
+		}
+		else
+		{
+		  _e.on_variable(_ns, var, data);
+		}
 		txt.remove(0, m+1);
 	      }
 	      else

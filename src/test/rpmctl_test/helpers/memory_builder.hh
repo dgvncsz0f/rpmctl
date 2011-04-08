@@ -45,6 +45,7 @@ namespace rpmctl_test
     virtual UnicodeString *on_start(const std::string &);
     virtual void on_text(const UnicodeString &, UnicodeString *);
     virtual void on_variable(const UnicodeString &, const UnicodeString &, UnicodeString *);
+    virtual void on_qualified_variable(const UnicodeString &, const UnicodeString &, UnicodeString *);
     virtual void on_eof(UnicodeString *);
     virtual void on_error(UnicodeString *);
 

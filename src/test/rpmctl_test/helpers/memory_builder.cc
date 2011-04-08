@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <iostream>
 #include <unicode/ustream.h>
 #include <rpmctl/parser.hh>
 #include <rpmctl_test/helpers/memory_builder.hh>
@@ -48,13 +49,22 @@ void rpmctl_test::memory_builder::on_text(const UnicodeString &txt, UnicodeStrin
   buffer->append(txt);
 }
 
-void rpmctl_test::memory_builder::on_variable(const UnicodeString &prefix, const UnicodeString &txt, UnicodeString *buffer)
+void rpmctl_test::memory_builder::on_variable(const UnicodeString &ns, const UnicodeString &txt, UnicodeString *buffer)
 {
-  std::map<UnicodeString,UnicodeString>::const_iterator it = _env.find(prefix +"."+ txt);
+  std::map<UnicodeString,UnicodeString>::const_iterator it = _env.find(ns +"::"+ txt);
   if (it != _env.end())
     buffer->append(it->second);
   else
-    buffer->append("$("+ prefix +"."+ txt +")");
+    buffer->append("$("+ txt +")");
+}
+
+void rpmctl_test::memory_builder::on_qualified_variable(const UnicodeString &ns, const UnicodeString &txt, UnicodeString *buffer)
+{
+  std::map<UnicodeString,UnicodeString>::const_iterator it = _env.find(ns +"::"+ txt);
+  if (it != _env.end())
+    buffer->append(it->second);
+  else
+    buffer->append("$("+ ns +"::"+ txt +")");
 }
 
 void rpmctl_test::memory_builder::on_eof(UnicodeString *buffer)

@@ -54,9 +54,9 @@ namespace rpmctl_test
   {
     UnicodeString buffer;
     std::map<UnicodeString,UnicodeString> env;
-    env["rpmctl.version"] = "3";
-    env["rpmctl.date"]    = "29 June 2007";
-    env["rpmctl.copysym"] = "©";
+    env["rpmctl::version"] = "3";
+    env["rpmctl::date"]    = "29 June 2007";
+    env["rpmctl::copysym"] = "©";
 
     boost::filesystem::path file = fixtures_path() / "file_with_variables";
     memory_builder membuilder(buffer, env);
@@ -83,6 +83,27 @@ namespace rpmctl_test
 
     CHECK_EQUAL(1, buffer.length());
     CHECK_EQUAL(UnicodeString("∎")[0], buffer[buffer.length()-1]);
+  }
+
+  TEST(parser_should_work_on_files_with_fully_qualified_variables)
+  {
+    UnicodeString buffer;
+    std::map<UnicodeString,UnicodeString> env;
+    env["foobar::version"] = "3";
+    env["foobar::date"]    = "29 June 2007";
+    env["foobar::copysym"] = "©";
+
+    boost::filesystem::path file = fixtures_path() / "file_with_fqv";
+    memory_builder membuilder(buffer, env);
+    rpmctl::parser<UnicodeString> parser(membuilder, "rpmctl");
+    parser.run(file.string());
+
+    CHECK_EQUAL(35146, buffer.length());
+    CHECK_EQUAL(-1, buffer.indexOf("$(foobar::version)"));
+    CHECK_EQUAL(-1, buffer.indexOf("$(foobar::date)"));
+    CHECK_EQUAL(-1, buffer.indexOf("$(foobar::copysym)"));
+    CHECK(buffer.indexOf("3, 29 June 2007") != -1);
+    CHECK(buffer.indexOf("Copyright © 2007") != -1);
   }
 
 }
