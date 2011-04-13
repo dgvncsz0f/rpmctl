@@ -26,9 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <memory>
 #include <cstdlib>
 #include <rpmctl/config.hh>
+#include <rpmctl/autoptr_array_adapter.hh>
 #include <rpmctl/machine.hh>
 #include <rpmctl/excepts.hh>
 #include <rpmctl/bdb_environment.hh>
@@ -67,26 +67,6 @@ UnicodeString __unserialize(const rpmctl::bytestring *buffer)
   rpmctl::machine::read_string(s, buffer);
   return(s);
 }
-
-class myautoptr_adapter
-{
-public:
-  myautoptr_adapter(char *array) :
-    _array(array)
-  {}
-  ~myautoptr_adapter()
-  {
-    delete[](_array);
-  }
-
-  char *operator*() const
-  {
-    return(_array);
-  }
-
-private:
-  char *_array;
-};
 
 static
 int __index_package(Db *, const Dbt *key, const Dbt *, Dbt *skey)
@@ -167,11 +147,11 @@ rpmctl::bdb_environment::~bdb_environment()
 void rpmctl::bdb_environment::put(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &val) throw(rpmctl::rpmctl_except)
 {
   int32_t keylength = __serialize(NULL, ns, key);
-  std::auto_ptr<myautoptr_adapter> keybuffer(new myautoptr_adapter(new char[keylength]));
+  std::auto_ptr<rpmctl::autoptr_array_adapter<char> > keybuffer(new rpmctl::autoptr_array_adapter<char>(new char[keylength]));
   __serialize(**keybuffer, ns, key);
 
   int32_t vallength = __serialize(NULL, val);
-  std::auto_ptr<myautoptr_adapter> valbuffer(new myautoptr_adapter(new char[vallength]));
+  std::auto_ptr<rpmctl::autoptr_array_adapter<char> > valbuffer(new rpmctl::autoptr_array_adapter<char>(new char[vallength]));
   __serialize(**valbuffer, val);
 
   Dbt dbkey(**keybuffer, keylength);
@@ -191,11 +171,11 @@ void rpmctl::bdb_environment::put(const UnicodeString &ns, const UnicodeString &
 
 UnicodeString rpmctl::bdb_environment::get(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
 {
-  std::auto_ptr<myautoptr_adapter> keybuffer(NULL);
-  std::auto_ptr<myautoptr_adapter> valbuffer(NULL);
+  std::auto_ptr<rpmctl::autoptr_array_adapter<char> > keybuffer(NULL);
+  std::auto_ptr<rpmctl::autoptr_array_adapter<char> > valbuffer(NULL);
 
   int32_t keylength = __serialize(NULL, ns, key);
-  keybuffer.reset(new myautoptr_adapter(new char[keylength]));
+  keybuffer.reset(new rpmctl::autoptr_array_adapter<char>(new char[keylength]));
   __serialize(**keybuffer, ns, key);
 
   Dbt dbkey(**keybuffer, keylength);
@@ -214,7 +194,7 @@ UnicodeString rpmctl::bdb_environment::get(const UnicodeString &ns, const Unicod
     catch (const DbMemoryException &)
     {
       u_int32_t vallength = dbval.get_size();
-      valbuffer.reset(new myautoptr_adapter(new char[vallength]));
+      valbuffer.reset(new rpmctl::autoptr_array_adapter<char>(new char[vallength]));
       dbval.set_ulen(vallength);
       dbval.set_data(**valbuffer);
       _master->get(NULL, &dbkey, &dbval, 0);

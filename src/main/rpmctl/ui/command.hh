@@ -29,18 +29,29 @@
 #ifndef __RPMCTL_UI_COMMAND_HH__
 #define __RPMCTL_UI_COMMAND_HH__
 
+#include <string>
+
 namespace rpmctl
 {
 
   namespace ui
   {
+    class router;
 
     class command
     {
     public:
+      enum exit_status
+      {
+	EXIT_SUCCESS,
+	EXIT_FAILURE
+      };
+
       virtual ~command();
 
-      virtual void exec(int, const char **) = 0;
+      virtual exit_status exec() = 0;
+
+      virtual void visit(router &) = 0;
     };
 
   }

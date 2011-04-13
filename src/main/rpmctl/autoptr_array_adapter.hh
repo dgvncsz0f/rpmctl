@@ -26,26 +26,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_UI_SET_COMMAND_HH__
-#define __RPMCTL_UI_SET_COMMAND_HH__
+#ifndef __RPMCTL_AUTOPTR_ARRAY_ADAPTER_HH__
+#define __RPMCTL_AUTOPTR_ARRAY_ADAPTER_HH__
 
-#include <rpmctl/ui/command.hh>
+#include <memory>
 
 namespace rpmctl
 {
 
-  namespace ui
+  template<typename T>
+  class autoptr_array_adapter
   {
+  public:
+    autoptr_array_adapter(T *array) :
+      _array(array)
+    {}
 
-    class set_command : public command
+    ~autoptr_array_adapter()
     {
-    public:
-      virtual ~set_command();
+      delete[](_array);
+    }
 
-      virtual void exec(int, const char **);
-    };
+    T *operator*() const
+    {
+      return(_array);
+    }
 
-  }
+  private:
+    T *_array;
+  };
 
 }
 

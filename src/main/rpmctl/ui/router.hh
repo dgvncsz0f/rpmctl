@@ -29,11 +29,17 @@
 #ifndef __RPMCTL_UI_ROUTER_HH__
 #define __RPMCTL_UI_ROUTER_HH__
 
+#include <string>
+#include <map>
+#include <vector>
+#include <popt.h>
+
 namespace rpmctl
 {
 
   namespace ui
   {
+    typedef struct poptOption option_args;
     class command;
 
     class router
@@ -42,7 +48,15 @@ namespace rpmctl
       router();
       ~router();
 
-      command *lookup(int argc, const char *argv[]);
+      std::vector<option_args*> &options();
+
+      void bind(command *);
+
+      command *lookup(int argc, const char **argv);
+
+    private:
+      std::map<std::string, command *> _table;
+      std::vector<option_args*> _options;
     };
 
   }

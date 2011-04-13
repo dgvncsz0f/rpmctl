@@ -30,11 +30,10 @@
 #include <rpmctl/ui/command.hh>
 #include <rpmctl/ui/router.hh>
 
-int main(int argc, const char *argv[])
+int main(int argc, const char **argv)
 {
   rpmctl::ui::router router;
   rpmctl::ui::command *command = router.lookup(argc, argv);
-
   u_cleanup();
   return(0);
 }

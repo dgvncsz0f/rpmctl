@@ -26,9 +26,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <memory>
 #include <popt.h>
+#include <rpmctl/autoptr_array_adapter.hh>
 #include <rpmctl/ui/router.hh>
 #include <rpmctl/ui/command.hh>
+
+static
+void __version_flag(rpmctl::ui::option_args *options, int *arg)
+{
+  rpmctl::ui::option_args option = { "version",
+                                     '\0',
+                                     POPT_ARG_NONE,
+                                     arg,
+                                     0,
+                                     "version and license of this software",
+                                     NULL
+                                   };
+  options[0] = option;
+}
+
+static
+void __popt_add_table(rpmctl::ui::option_args *options, rpmctl::ui::option_args *help_options)
+{
+  rpmctl::ui::option_args option = { NULL,
+                                     '\0',
+                                     POPT_ARG_INCLUDE_TABLE,
+                                     help_options,
+                                     0,
+                                     "Help options:",
+                                     NULL
+                                   };
+  options[0] = option;
+}
+
+static
+void __popt_end(rpmctl::ui::option_args *options)
+{
+  rpmctl::ui::option_args option = { NULL, '\0', 0, NULL, 0, NULL, NULL };
+  options[0] = option;
+}
+
+static
+void __print_help(poptContext ctx)
+{
+  poptPrintHelp(ctx, stderr, 0);
+}
 
 rpmctl::ui::router::router()
 {}
@@ -36,31 +79,44 @@ rpmctl::ui::router::router()
 rpmctl::ui::router::~router()
 {}
 
+void rpmctl::ui::router::bind(rpmctl::ui::command *command)
+{
+  command->visit(*this);
+}
+
+std::vector<rpmctl::ui::option_args*> &rpmctl::ui::router::options()
+{
+  return(_options);
+}
+
 rpmctl::ui::command *rpmctl::ui::router::lookup(int argc, const char *argv[])
 {
-  int version;
-  struct poptOption options[] = { { "version",
-				    '\0',
-				    POPT_ARG_NONE,
-				    &version,
-				    0,
-				    "version and license of this software",
-				    NULL
-                                  },
-				  POPT_AUTOHELP
-				  POPT_TABLEEND
-                                };
+  int version=0, help=0;
+  int rc;
+  rpmctl::ui::option_args *options_   = new rpmctl::ui::option_args[_options.size() + 3];
+  rpmctl::ui::option_args help_opts[] = { { "help", 'h', POPT_ARG_NONE, &help, 0, "this message", NULL },
+                                            POPT_TABLEEND
+                                        };
 
-  poptContext optctx = poptGetContext(argv[0], argc, argv, options, 0);
+  rpmctl::autoptr_array_adapter<rpmctl::ui::option_args> *adapter = new rpmctl::autoptr_array_adapter<rpmctl::ui::option_args>(options_);
+  std::auto_ptr<rpmctl::autoptr_array_adapter<rpmctl::ui::option_args> > options(adapter);
+
+  __version_flag(**options, &version);
+  __popt_add_table((**options)+_options.size()+1, help_opts);
+  __popt_end((**options)+_options.size()+2);
+
+  for (unsigned int i=0; i<_options.size(); i+=1)
+  {
+    __popt_add_table((**options)+i+1, _options[i]);
+  }
+
+  poptContext optctx = poptGetContext(argv[0], argc, argv, **options, 0);
   poptSetOtherOptionHelp(optctx, "[OPTION...] <command> [ARG...]");
 
-  if (argc < 2)
+  while ((rc=poptGetNextOpt(optctx)) > 0);
+  if (help || argc<2)
   {
-    poptPrintUsage(optctx, stderr, 0);
-  }
-  else
-  {
-    int rc = poptGetNextOpt(optctx);
+    __print_help(optctx);
   }
 
   poptFreeContext(optctx);
