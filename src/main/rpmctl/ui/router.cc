@@ -26,122 +26,166 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <cstring>
+#include <sstream>
+#include <string>
 #include <popt.h>
 #include <rpmctl/autoptr_array_adapter.hh>
+#include <rpmctl/autoptr_malloc_adapter.hh>
 #include <rpmctl/ui/router.hh>
 #include <rpmctl/ui/command.hh>
 
 static
-void __version_flag(rpmctl::ui::option_args *options, int *arg)
+int __without_globals(const char **newargv, int argc, const char **argv)
 {
-  rpmctl::ui::option_args option = { "version",
-                                     '\0',
-                                     POPT_ARG_NONE,
-                                     arg,
-                                     0,
-                                     "version and license of this software",
-                                     NULL
-                                   };
-  options[0] = option;
+  int newargc=0;
+  for (int k=0; k<argc; k+=1)
+  {
+    if (std::strcmp(argv[k], "--help")!=0 && std::strcmp(argv[k], "--version")!=0)
+      newargv[newargc++] = argv[k];
+  }
+  return(newargc);
 }
 
-static
-void __popt_add_table(rpmctl::ui::option_args *options, const std::string &message, rpmctl::ui::option_args *help_options)
-{
-  rpmctl::ui::option_args option = { NULL,
-                                     '\0',
-                                     POPT_ARG_INCLUDE_TABLE,
-                                     help_options,
-                                     0,
-                                     (message.empty() ? NULL : message.c_str()),
-                                     NULL
-                                   };
-  options[0] = option;
-}
-
-static
-void __popt_end(rpmctl::ui::option_args *options)
-{
-  rpmctl::ui::option_args option = { NULL, '\0', 0, NULL, 0, NULL, NULL };
-  options[0] = option;
-}
-
-static
-void __print_help(poptContext ctx)
-{
-  poptPrintHelp(ctx, stderr, 0);
-}
-
-rpmctl::ui::option_entry::option_entry(const std::string &t, rpmctl::ui::option_args *o, void (*f)(void *)) :
-  title(t),
-  options(o),
-  dealloc_f(f)
+rpmctl::ui::input::input(int argc, const char **argv) :
+  _argv(argv),
+  _argc(argc),
+  _wanthelp(false)
 {}
 
-rpmctl::ui::option_entry::~option_entry()
+void rpmctl::ui::input::want_help(bool v)
 {
-  dealloc_f(options);
+  _wanthelp = v;
+}
+
+bool rpmctl::ui::input::want_help() const
+{
+  return(_wanthelp);
+}
+
+const char **rpmctl::ui::input::argv() const
+{
+  return(_argv);
+}
+
+int rpmctl::ui::input::argc() const
+{
+  return(_argc);
+}
+
+rpmctl::ui::output::output(struct poptOption *opts, const std::string &progname) :
+  _globalopts(opts),
+  _progname(progname),
+  _cmdname("<command>")
+{}
+
+rpmctl::ui::output::output(struct poptOption *opts, const std::string &progname, const std::string &cmdname) :
+  _globalopts(opts),
+  _progname(progname),
+  _cmdname(cmdname)
+{}
+
+void rpmctl::ui::output::print_error(const std::string &msg)
+{
+  std::cerr << _progname 
+            << ": "
+            << msg 
+            << std::endl;
+}
+
+void rpmctl::ui::output::print_error(poptContext ctx, int rc)
+{
+  std::ostringstream message;
+  message << poptBadOption(ctx, POPT_BADOPTION_NOALIAS)
+          << ": "
+          << poptStrerror(rc);
+  print_error(message.str());
+}
+
+void rpmctl::ui::output::print_help()
+{
+  std::string help_message;
+  help_message += "[OPTION...] "+ _cmdname +" [ARG...]";
+
+  struct poptOption myoptions[] = { { NULL, '\0', POPT_ARG_INCLUDE_TABLE, _globalopts, 0, NULL, NULL },
+                                    POPT_TABLEEND
+                                  };
+
+  const char *argv[] = { _progname.c_str(), NULL };
+  poptContext optctx = poptGetContext(argv[0], 1, argv, myoptions, 0);
+  poptSetOtherOptionHelp(optctx, help_message.c_str());
+  poptPrintHelp(optctx, stderr, 0);
+  poptFreeContext(optctx);
+}
+
+void rpmctl::ui::output::print_help(struct poptOption *options)
+{
+  std::string help_message;
+  help_message += "[OPTION...] "+ _cmdname +" [ARG...]";
+
+  struct poptOption myoptions[] = { { NULL, '\0', POPT_ARG_INCLUDE_TABLE, options,     0, NULL,              NULL },
+                                    { NULL, '\0', POPT_ARG_INCLUDE_TABLE, _globalopts, 0, "Global options:", NULL },
+                                    POPT_TABLEEND
+                                  };
+
+  const char *argv[] = { _progname.c_str(), NULL };
+  poptContext optctx = poptGetContext(argv[0], 1, argv, myoptions, 0);
+  poptSetOtherOptionHelp(optctx, help_message.c_str());
+  poptPrintHelp(optctx, stderr, 0);
+  poptFreeContext(optctx);
 }
 
 rpmctl::ui::router::router()
 {}
 
 rpmctl::ui::router::~router()
+{}
+
+void rpmctl::ui::router::bind(const std::string &name, rpmctl::ui::command *command)
 {
-  for (unsigned int k=0; k<_options.size(); k+=1)
-  {
-    rpmctl::ui::option_entry *e = _options[k];
-    delete(e);
-  }
+  _table[name] = command;
 }
 
-void rpmctl::ui::router::bind(rpmctl::ui::command *command)
-{
-  command->visit(*this);
-}
-
-void rpmctl::ui::router::add_options(const std::string &title, rpmctl::ui::option_args *options, void (*f)(void*))
-{
-  _options.push_back(new rpmctl::ui::option_entry(title, options, f));
-}
-
-rpmctl::ui::command *rpmctl::ui::router::lookup(int argc, const char *argv[])
+int rpmctl::ui::router::route(int argc, const char **argv)
 {
   int version=0, help=0;
-  int rc;
-  rpmctl::ui::option_args *options_   = new rpmctl::ui::option_args[_options.size() + 3];
-  rpmctl::ui::option_args help_opts[] = { { "help", 'h', POPT_ARG_NONE, &help, 0, "this message", NULL },
-                                          POPT_TABLEEND
-                                        };
+  struct poptOption options[] = { { "help",    '\0', POPT_ARG_NONE, &help,     0, "this message",                         NULL },
+                                  { "version", '\0', POPT_ARG_NONE, &version,  0, "version and license of this software", NULL },
+                                  POPT_TABLEEND
+                                };
 
-  rpmctl::autoptr_array_adapter<rpmctl::ui::option_args> *adapter = new rpmctl::autoptr_array_adapter<rpmctl::ui::option_args>(options_);
-  std::auto_ptr<rpmctl::autoptr_array_adapter<rpmctl::ui::option_args> > options(adapter);
-
-  __version_flag(**options, &version);
-  __popt_add_table((**options)+1, "", help_opts);
-  __popt_end((**options)+_options.size()+2);
-
-  for (unsigned int i=0; i<_options.size(); i+=1)
-  {
-    __popt_add_table((**options)+2+i, _options[i]->title, _options[i]->options);
-  }
-
-  std::string help_message;
-  help_message += "[OPTION...] <command> [ARG...]";
-  help_message += "\nExtremely simple management system for RPM config files";
-  help_message += "\n\nGlobal options:";
-
-  poptContext optctx = poptGetContext(argv[0], argc, argv, **options, 0);
-  poptSetOtherOptionHelp(optctx, help_message.c_str());
-
+  int rc=0;
+  poptContext optctx = poptGetContext(argv[0], argc, argv, options, 0);
   while ((rc=poptGetNextOpt(optctx)) > 0);
-  if (help || argc<2)
+
+  int exstatus=EXIT_SUCCESS;
+  const char *cmdstr = poptGetArg(optctx);
+  std::map<std::string, rpmctl::ui::command*>::const_iterator it = _table.find(cmdstr==NULL ? "" : cmdstr);
+  if (it!=_table.end())
   {
-    __print_help(optctx);
+    std::auto_ptr<autoptr_malloc_adapter> auto_newargv(new autoptr_malloc_adapter(std::malloc(sizeof(char*) * argc)));
+    const char **newargv = static_cast<const char**>(**auto_newargv);
+    int newargc = __without_globals(newargv, argc, argv);
+    
+    rpmctl::ui::input input(newargc, newargv);
+    rpmctl::ui::output output(options, argv[0], cmdstr);
+    rpmctl::ui::command *command = it->second;
+    
+    input.want_help(help!=0);
+    exstatus = command->exec(input, output);
+  }
+  else
+  {
+    rpmctl::ui::output output(options, argv[0]);
+    if (rc == -1)
+      output.print_help();
+    else
+      output.print_error(optctx, rc);
   }
 
   poptFreeContext(optctx);
-  return(NULL);
+  return(exstatus);
 }

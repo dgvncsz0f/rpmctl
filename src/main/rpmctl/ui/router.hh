@@ -40,17 +40,42 @@ namespace rpmctl
 
   namespace ui
   {
-    typedef struct poptOption option_args;
     class command;
 
-    struct option_entry
-    {
-      option_entry(const std::string &, option_args *, void (*)(void*));
-      ~option_entry();
 
-      std::string title;
-      option_args *options;
-      void (*dealloc_f)(void *);
+    class input
+    {
+    public:
+      input(int, const char **);
+
+      void want_help(bool );
+      bool want_help() const;
+
+      int argc() const;
+      const char **argv() const;
+
+    private:
+      const char **_argv;
+      int _argc;
+      bool _wanthelp;
+    };
+
+    class output
+    {
+    public:
+      output(struct poptOption *, const std::string &);
+      output(struct poptOption *, const std::string &, const std::string &);
+
+      void print_help();
+      void print_help(struct poptOption *);
+
+      void print_error(const std::string &);
+      void print_error(poptContext, int);
+
+    private:
+      struct poptOption *_globalopts;
+      std::string _progname;
+      std::string _cmdname;
     };
 
     class router
@@ -59,21 +84,24 @@ namespace rpmctl
       router();
       ~router();
 
-      /*! Adds a new option into this router, along with a custom
-       *  destructor function for it.
+      /*! Bind a given command to a name in the CLI.
        *
-       *  \param The help message of these options;
-       *  \param The options itself;
-       *  \param The destructor function for the option_args variable;
+       * \param The name by which users can invoke this command;
+       * \param The command itself.
        */
-      void add_options(const std::string &, option_args*, void (*)(void *));
+      void bind(const std::string &, command *);
 
-      void bind(command *);
-      command *lookup(int argc, const char **argv);
+      /*! The main routine. It parses the command line arguments and
+       *  invoke the proper command.
+       * 
+       *  \param The number of arguments, as provided to the main function;
+       *  \param The arguments (sized according argc) as provided to the main function;
+       *  \return 0=success; failure if something else.
+       */
+      int route(int argc, const char **argv);
 
     private:
       std::map<std::string, command *> _table;
-      std::vector<option_entry *> _options;
     };
 
   }

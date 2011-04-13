@@ -26,18 +26,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/ui/command.hh>
-#include <rpmctl/ui/router.hh>
-#include <rpmctl/ui/put_command.hh>
+#ifndef __RPMCTL_AUTOPTR_MALLOC_ADAPTER_HH__
+#define __RPMCTL_AUTOPTR_MALLOC_ADAPTER_HH__
 
-int main(int argc, const char **argv)
+namespace rpmctl
 {
-  rpmctl::ui::put_command put_command;
-  rpmctl::ui::router router;
-  router.bind("put", &put_command);
-  int exstatus = router.route(argc, argv);
-  u_cleanup();
-  return(exstatus);
+
+  class autoptr_malloc_adapter
+  {
+  public:
+    autoptr_malloc_adapter(void *);
+    ~autoptr_malloc_adapter();
+
+    void *operator*();
+
+  private:
+    void *_mem;
+  };
+
 }
 
+#endif

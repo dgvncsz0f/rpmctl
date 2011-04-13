@@ -36,22 +36,18 @@ namespace rpmctl
 
   namespace ui
   {
+    class input;
+    class output;
     class router;
 
     class command
     {
     public:
-      enum exit_status
-      {
-        EXIT_SUCCESS,
-        EXIT_FAILURE
-      };
-
       virtual ~command();
 
-      virtual exit_status exec() = 0;
-
-      virtual void visit(router &) = 0;
+      /*! Invokes this command. You should not invoke this directly, use the router instead.
+       */
+      virtual int exec(input &, output &) = 0;
     };
 
   }

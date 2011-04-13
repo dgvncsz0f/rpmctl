@@ -26,18 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/ui/command.hh>
-#include <rpmctl/ui/router.hh>
-#include <rpmctl/ui/put_command.hh>
+#ifndef __RPMCTL_POPT_UTILS_CC__
+#define __RPMCTL_POPT_UTILS_CC__
 
-int main(int argc, const char **argv)
+#include <popt.h>
+
+int rpmctl_popt_loop(poptContext optctx)
 {
-  rpmctl::ui::put_command put_command;
-  rpmctl::ui::router router;
-  router.bind("put", &put_command);
-  int exstatus = router.route(argc, argv);
-  u_cleanup();
-  return(exstatus);
+  int rc=0;
+  while ((rc=poptGetNextOpt(optctx)) > 0);
+  return(rc);
 }
 
+#endif

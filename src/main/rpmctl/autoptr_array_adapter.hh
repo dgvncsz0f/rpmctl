@@ -47,7 +47,7 @@ namespace rpmctl
       delete[](_array);
     }
 
-    T *operator*() const
+    T *operator*()
     {
       return(_array);
     }
