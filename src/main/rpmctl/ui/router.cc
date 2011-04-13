@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <iostream>
 #include <memory>
 #include <popt.h>
 #include <rpmctl/autoptr_array_adapter.hh>
@@ -47,14 +48,14 @@ void __version_flag(rpmctl::ui::option_args *options, int *arg)
 }
 
 static
-void __popt_add_table(rpmctl::ui::option_args *options, rpmctl::ui::option_args *help_options)
+void __popt_add_table(rpmctl::ui::option_args *options, const std::string &message, rpmctl::ui::option_args *help_options)
 {
   rpmctl::ui::option_args option = { NULL,
                                      '\0',
                                      POPT_ARG_INCLUDE_TABLE,
                                      help_options,
                                      0,
-                                     "Help options:",
+                                     (message.empty() ? NULL : message.c_str()),
                                      NULL
                                    };
   options[0] = option;
@@ -84,7 +85,7 @@ void rpmctl::ui::router::bind(rpmctl::ui::command *command)
   command->visit(*this);
 }
 
-std::vector<rpmctl::ui::option_args*> &rpmctl::ui::router::options()
+std::vector<std::pair<std::string, rpmctl::ui::option_args*> > &rpmctl::ui::router::options()
 {
   return(_options);
 }
@@ -102,16 +103,21 @@ rpmctl::ui::command *rpmctl::ui::router::lookup(int argc, const char *argv[])
   std::auto_ptr<rpmctl::autoptr_array_adapter<rpmctl::ui::option_args> > options(adapter);
 
   __version_flag(**options, &version);
-  __popt_add_table((**options)+_options.size()+1, help_opts);
+  __popt_add_table((**options)+_options.size()+1, "", help_opts);
   __popt_end((**options)+_options.size()+2);
 
   for (unsigned int i=0; i<_options.size(); i+=1)
   {
-    __popt_add_table((**options)+i+1, _options[i]);
+    __popt_add_table((**options)+i+1, _options[i].first, _options[i].second);
   }
 
+  std::string help_message;
+  help_message += "[OPTION...] <command> [ARG...]";
+  help_message += "\nExtremely simple management system for RPM config files";
+  help_message += "\n\nGlobal options:";
+
   poptContext optctx = poptGetContext(argv[0], argc, argv, **options, 0);
-  poptSetOtherOptionHelp(optctx, "[OPTION...] <command> [ARG...]");
+  poptSetOtherOptionHelp(optctx, help_message.c_str());
 
   while ((rc=poptGetNextOpt(optctx)) > 0);
   if (help || argc<2)

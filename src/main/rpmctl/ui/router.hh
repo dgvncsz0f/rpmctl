@@ -30,8 +30,9 @@
 #define __RPMCTL_UI_ROUTER_HH__
 
 #include <string>
-#include <map>
+#include <utility>
 #include <vector>
+#include <map>
 #include <popt.h>
 
 namespace rpmctl
@@ -48,7 +49,7 @@ namespace rpmctl
       router();
       ~router();
 
-      std::vector<option_args*> &options();
+      std::vector<std::pair<std::string, option_args*> > &options();
 
       void bind(command *);
 
@@ -56,7 +57,7 @@ namespace rpmctl
 
     private:
       std::map<std::string, command *> _table;
-      std::vector<option_args*> _options;
+      std::vector<std::pair<std::string,option_args*> > _options;
     };
 
   }
