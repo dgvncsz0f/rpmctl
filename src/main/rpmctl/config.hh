@@ -33,8 +33,4 @@
 #define RPMCTL_MAXBUFSZ 8192
 #endif
 
-#ifndef RPMCTL_BIGENDIAN
-#define RPMCTL_BIGENDIAN false
-#endif
-
 #endif
