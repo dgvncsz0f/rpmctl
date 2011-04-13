@@ -74,20 +74,37 @@ void __print_help(poptContext ctx)
   poptPrintHelp(ctx, stderr, 0);
 }
 
+rpmctl::ui::option_entry::option_entry(const std::string &t, rpmctl::ui::option_args *o, void (*f)(void *)) :
+  title(t),
+  options(o),
+  dealloc_f(f)
+{}
+
+rpmctl::ui::option_entry::~option_entry()
+{
+  dealloc_f(options);
+}
+
 rpmctl::ui::router::router()
 {}
 
 rpmctl::ui::router::~router()
-{}
+{
+  for (unsigned int k=0; k<_options.size(); k+=1)
+  {
+    rpmctl::ui::option_entry *e = _options[k];
+    delete(e);
+  }
+}
 
 void rpmctl::ui::router::bind(rpmctl::ui::command *command)
 {
   command->visit(*this);
 }
 
-std::vector<std::pair<std::string, rpmctl::ui::option_args*> > &rpmctl::ui::router::options()
+void rpmctl::ui::router::add_options(const std::string &title, rpmctl::ui::option_args *options, void (*f)(void*))
 {
-  return(_options);
+  _options.push_back(new rpmctl::ui::option_entry(title, options, f));
 }
 
 rpmctl::ui::command *rpmctl::ui::router::lookup(int argc, const char *argv[])
@@ -96,19 +113,19 @@ rpmctl::ui::command *rpmctl::ui::router::lookup(int argc, const char *argv[])
   int rc;
   rpmctl::ui::option_args *options_   = new rpmctl::ui::option_args[_options.size() + 3];
   rpmctl::ui::option_args help_opts[] = { { "help", 'h', POPT_ARG_NONE, &help, 0, "this message", NULL },
-                                            POPT_TABLEEND
+                                          POPT_TABLEEND
                                         };
 
   rpmctl::autoptr_array_adapter<rpmctl::ui::option_args> *adapter = new rpmctl::autoptr_array_adapter<rpmctl::ui::option_args>(options_);
   std::auto_ptr<rpmctl::autoptr_array_adapter<rpmctl::ui::option_args> > options(adapter);
 
   __version_flag(**options, &version);
-  __popt_add_table((**options)+_options.size()+1, "", help_opts);
+  __popt_add_table((**options)+1, "", help_opts);
   __popt_end((**options)+_options.size()+2);
 
   for (unsigned int i=0; i<_options.size(); i+=1)
   {
-    __popt_add_table((**options)+i+1, _options[i].first, _options[i].second);
+    __popt_add_table((**options)+2+i, _options[i]->title, _options[i]->options);
   }
 
   std::string help_message;

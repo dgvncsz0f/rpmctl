@@ -43,8 +43,8 @@ namespace rpmctl
     public:
       enum exit_status
       {
-	EXIT_SUCCESS,
-	EXIT_FAILURE
+        EXIT_SUCCESS,
+        EXIT_FAILURE
       };
 
       virtual ~command();

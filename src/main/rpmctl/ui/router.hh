@@ -43,21 +43,37 @@ namespace rpmctl
     typedef struct poptOption option_args;
     class command;
 
+    struct option_entry
+    {
+      option_entry(const std::string &, option_args *, void (*)(void*));
+      ~option_entry();
+
+      std::string title;
+      option_args *options;
+      void (*dealloc_f)(void *);
+    };
+
     class router
     {
     public:
       router();
       ~router();
 
-      std::vector<std::pair<std::string, option_args*> > &options();
+      /*! Adds a new option into this router, along with a custom
+       *  destructor function for it.
+       *
+       *  \param The help message of these options;
+       *  \param The options itself;
+       *  \param The destructor function for the option_args variable;
+       */
+      void add_options(const std::string &, option_args*, void (*)(void *));
 
       void bind(command *);
-
       command *lookup(int argc, const char **argv);
 
     private:
       std::map<std::string, command *> _table;
-      std::vector<std::pair<std::string,option_args*> > _options;
+      std::vector<option_entry *> _options;
     };
 
   }

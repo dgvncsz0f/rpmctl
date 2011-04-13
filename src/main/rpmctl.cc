@@ -29,11 +29,14 @@
 #include <unicode/uclean.h>
 #include <rpmctl/ui/command.hh>
 #include <rpmctl/ui/router.hh>
+#include <rpmctl/ui/set_command.hh>
 
 int main(int argc, const char **argv)
 {
+  rpmctl::ui::set_command set_command("set");
   rpmctl::ui::router router;
-  rpmctl::ui::command *command = router.lookup(argc, argv);
+  router.bind(&set_command);
+  router.lookup(argc, argv);
   u_cleanup();
   return(0);
 }
