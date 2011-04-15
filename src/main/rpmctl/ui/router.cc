@@ -117,8 +117,30 @@ void rpmctl::ui::output::print_help()
   const char *argv[] = { _progname.c_str(), NULL };
   poptContext optctx = poptGetContext(argv[0], 1, argv, myoptions, 0);
   poptSetOtherOptionHelp(optctx, help_message.c_str());
-  poptPrintHelp(optctx, stderr, 0);
+  poptPrintHelp(optctx, stdout, 0);
   poptFreeContext(optctx);
+}
+
+void rpmctl::ui::output::print_help(const std::vector<std::string> &commands)
+{
+  print_help();
+  
+  std::cout << std::endl
+            << "Available commands:"
+            << std::endl;
+  std::vector<std::string>::const_iterator it;
+  for (it=commands.begin(); it!=commands.end(); it++)
+  {
+    std::cout << "    "
+              << *it
+              << std::endl;
+  }
+  std::cout << std::endl
+            << "Use "
+            << _progname
+            << "--help <command> "
+            << "for more information on a specific command."
+            << std::endl;
 }
 
 void rpmctl::ui::output::print_help(struct poptOption *options)
@@ -134,7 +156,7 @@ void rpmctl::ui::output::print_help(struct poptOption *options)
   const char *argv[] = { _progname.c_str(), NULL };
   poptContext optctx = poptGetContext(argv[0], 1, argv, myoptions, 0);
   poptSetOtherOptionHelp(optctx, help_message.c_str());
-  poptPrintHelp(optctx, stderr, 0);
+  poptPrintHelp(optctx, stdout, 0);
   poptFreeContext(optctx);
 }
 
@@ -143,6 +165,15 @@ rpmctl::ui::router::router()
 
 rpmctl::ui::router::~router()
 {}
+
+std::vector<std::string> rpmctl::ui::router::commands() const
+{
+  std::vector<std::string> v;
+  std::map<std::string, rpmctl::ui::command*>::const_iterator it;
+  for (it=_table.begin(); it!=_table.end(); it++)
+    v.push_back(it->first);
+  return(v);
+}
 
 void rpmctl::ui::router::bind(const std::string &name, rpmctl::ui::command *command)
 {
@@ -181,7 +212,7 @@ int rpmctl::ui::router::route(int argc, const char **argv)
   {
     rpmctl::ui::output output(options, argv[0]);
     if (rc == -1)
-      output.print_help();
+      output.print_help(commands());
     else
       output.print_error(optctx, rc);
   }
