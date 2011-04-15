@@ -70,8 +70,13 @@ namespace rpmctl
       void print_help(const std::vector<std::string> &);
       void print_help(struct poptOption *);
 
+      bool validates_notnull(void *, const std::string &);
+
       void print_error(const std::string &);
       void print_error(poptContext, int);
+
+      const std::string &progname() const;
+      const std::string &cmdname() const;
 
     private:
       struct poptOption *_globalopts;

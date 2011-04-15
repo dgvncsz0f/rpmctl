@@ -29,28 +29,27 @@
 #include <cstdlib>
 #include <memory>
 #include <popt.h>
+#include <unicode/ustream.h>
 #include <rpmctl/bdb_environment.hh>
 #include <rpmctl/autoptr_malloc_adapter.hh>
 #include <rpmctl/ui/router.hh>
-#include <rpmctl/ui/put_command.hh>
+#include <rpmctl/ui/get_command.hh>
 
-rpmctl::ui::put_command::put_command()
+rpmctl::ui::get_command::get_command()
 {}
 
-rpmctl::ui::put_command::~put_command()
+rpmctl::ui::get_command::~get_command()
 {}
 
-int rpmctl::ui::put_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &output)
+int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &output)
 {
-  char *home=NULL, *ns=NULL, *key=NULL, *val=NULL;
+  char *home=NULL, *ns=NULL, *key=NULL;
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autohome(new rpmctl::autoptr_malloc_adapter(home));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autons(new rpmctl::autoptr_malloc_adapter(ns));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autokey(new rpmctl::autoptr_malloc_adapter(key));
-  std::auto_ptr<rpmctl::autoptr_malloc_adapter> autoval(new rpmctl::autoptr_malloc_adapter(val));
   struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING, &home, 0, "Specify a home directory for the database environment [default=/var/lib/rpmctl]", NULL },
                                   { "namespace", 'n',  POPT_ARG_STRING, &ns,   0, "the package name", NULL },
                                   { "key",       'k',  POPT_ARG_STRING, &key,  0, "The name of the variable", NULL },
-                                  { "value",     'v',  POPT_ARG_STRING, &val,  0, "The value to assign to this variable", NULL },
                                   POPT_TABLEEND
                                 };
   
@@ -67,15 +66,15 @@ int rpmctl::ui::put_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &
       output.print_error(optctx, rc);
     }
     else if (!output.validates_notnull(ns,  "namespace must not be null") ||
-             !output.validates_notnull(key, "key must not be null")       ||
-             !output.validates_notnull(val, "value must not be null"))
+             !output.validates_notnull(key, "key must not be null"))
     {
       exstatus = EXIT_FAILURE;
     }
     else
     {
       rpmctl::bdb_environment env(home==NULL ? "/var/lib/rpmctl" : home);
-      env.put(ns, key, val);
+      std::cout << env.get(ns, key, "<<<variable not defined>>>")
+                << std::endl;
     }
   }
 

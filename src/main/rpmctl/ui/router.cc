@@ -138,7 +138,7 @@ void rpmctl::ui::output::print_help(const std::vector<std::string> &commands)
   std::cout << std::endl
             << "Use "
             << _progname
-            << "--help <command> "
+            << " --help <command> "
             << "for more information on a specific command."
             << std::endl;
 }
@@ -146,7 +146,7 @@ void rpmctl::ui::output::print_help(const std::vector<std::string> &commands)
 void rpmctl::ui::output::print_help(struct poptOption *options)
 {
   std::string help_message;
-  help_message += "[OPTION...] "+ _cmdname +" [ARG...]";
+  help_message += "[OPTION...] "+ _cmdname +" [ARG...]\n";
 
   struct poptOption myoptions[] = { { NULL, '\0', POPT_ARG_INCLUDE_TABLE, options,     0, NULL,              NULL },
                                     { NULL, '\0', POPT_ARG_INCLUDE_TABLE, _globalopts, 0, "Global options:", NULL },
@@ -158,6 +158,26 @@ void rpmctl::ui::output::print_help(struct poptOption *options)
   poptSetOtherOptionHelp(optctx, help_message.c_str());
   poptPrintHelp(optctx, stdout, 0);
   poptFreeContext(optctx);
+}
+
+const std::string &rpmctl::ui::output::progname() const
+{
+  return(_progname);
+}
+
+const std::string &rpmctl::ui::output::cmdname() const
+{
+  return(_cmdname);
+}
+
+bool rpmctl::ui::output::validates_notnull(void *p, const std::string &message)
+{
+  if (p==NULL)
+  {
+    print_error(message);
+    return(false);
+  }
+  return(true);
 }
 
 rpmctl::ui::router::router()
