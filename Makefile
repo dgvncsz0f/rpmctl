@@ -48,7 +48,7 @@ MAIN = rpmctl
 DIST = $(CURDIR)/dist
 
 override CXXFLAGS += -W -Wall -pedantic -Wpointer-arith -Wwrite-strings
-override CPPFLAGS += -Isrc/main -Isrc/test
+override CPPFLAGS += -Isrc/main
 override LDFLAGS  += $(shell $(BIN_ICUCONFIG) --ldflags-system --ldflags-libsonly --ldflags-icuio) -ldb_cxx -lpopt
 
 compile:
@@ -100,9 +100,9 @@ __compile_obj: $(OBJ_FILES)
 __build_main: LDFLAGS += 
 __build_main: $(DIST)/bin/$(MAIN)
 
-__build_test: CPPFLAGS += -I/usr/include/unittest++
-__build_test: LDFLAGS  += -ldb_cxx -lboost_filesystem -lboost_system -lunittest++ -lgcov
-__build_test: __compile_obj $(DIST)/bin/$(TEST)
+__build_test: CPPFLAGS += -Isrc/test -I/usr/include/unittest++
+__build_test: LDFLAGS  += -lboost_filesystem -lboost_system -lunittest++ -lgcov
+__build_test: $(DIST)/bin/$(TEST)
 
 ifeq ($(BIN_TEST),)
   $(error "test binary not found [define one using BIN_TEST variable]")
