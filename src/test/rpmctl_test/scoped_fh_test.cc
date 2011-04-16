@@ -89,6 +89,7 @@ namespace rpmctl_test
     }
     else
     {
+      CHECK(fstat(fd, &new_s)==0);
       CHECK(new_s.st_ino != old_s.st_ino);
     }
   }
