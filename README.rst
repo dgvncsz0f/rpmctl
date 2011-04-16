@@ -6,7 +6,7 @@ The problem we are trying to solve is very specific to our needs. We use RPM to 
 1 Minute Tutorial
 =================
 
-This software provides a simple templating system that can be used to customize configuration files. For instance, suppose you have a package, say *foobar*, which installs a config file under */etc/foobar/file.conf* with the following content:
+This software provides a simple templating system that can be used to customize configuration files. For instance, suppose you have a package, say *foobar*, which installs a config file under */etc/foobar/file.conf* with the following content::
 
   hostname: $(hostname)
   chroot: $(foobar::chroot)
@@ -18,13 +18,13 @@ The file above defined two variables, which are enclosed between `$(` and `)` ch
   $ rpmctl put -n foobar -k hostname -v 127.0.0.1
   $ rpmctl put -n foobar -k chroot -v /var/jails/0
 
-This will define these two variables, which will be persisted into a local database. Invoking the command *apply* should expand this variables, replacing them by the values you have just defined:
+This will define these two variables, which will be persisted into a local database. Invoking the command *apply* should expand this variables, replacing them by the values you have just defined::
 
   $ rpmctl apply -p foobar -f /etc/foobar/file.conf
   # alternatively, which makes rpmctl to check on the package for %config entries
   $ rpmctl apply -p foobar
 
-The config file should now look like something like this:
+The config file should now look like something like this::
 
   $ cat /etc/foobar/file.conf
   hostname: 127.0.0.1
@@ -51,12 +51,16 @@ Testing
 Compiling
 =========
 
+::
+
   $ make build
 
 Binaries will be available under `dist/bin` directory.
 
 Testing
 =======
+
+::
 
   $ make tests
 
