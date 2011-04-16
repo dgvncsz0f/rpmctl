@@ -25,10 +25,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-BIN_FIND  = $(shell which find 2>/dev/null)
-BIN_TEST  = $(shell which test 2>/dev/null)
-BIN_TOUCH = $(shell which touch 2>/dev/null)
-BIN_ENV   = $(shell which env 2>/dev/null)
+BIN_FIND    = $(shell which find 2>/dev/null)
+BIN_TEST    = $(shell which test 2>/dev/null)
+BIN_TOUCH   = $(shell which touch 2>/dev/null)
+BIN_ENV     = $(shell which env 2>/dev/null)
+BIN_LCOV    = $(shell which lcov 2>/dev/null)
+BIN_GENHTML = $(shell which genhtml 2>/dev/null)
 
 INC_FILES = $(wildcard src/main/rpmctl/*.hh) $(wildcard src/main/rpmctl/ui/*.hh) 
 TPL_FILES = $(wildcard src/main/rpmctl/*.ht)
@@ -57,6 +59,15 @@ tests:
 	@$(MAKE) __build_test
 	/usr/bin/env MALLOC_CHECK_=3 $(DIST)/bin/$(TEST)
 
+coverage: clean
+	@$(MAKE) "CPPFLAGS=--coverage $(CPPFLAGS)" "LDFLAGS=$(LDFLAGS) -lgcov" __build_test
+	$(BIN_LCOV) -c -i -b $(CURDIR) -d $(CURDIR) -o $(DIST)/rpmctl_base.info
+	$(BIN_ENV) MALLOC_CHECK_=3 $(DIST)/bin/$(TEST)
+	$(BIN_LCOV) -c -b $(CURDIR) -d $(CURDIR) -o $(DIST)/rpmctl_test.info
+	$(BIN_LCOV) -a $(DIST)/rpmctl_base.info -a $(DIST)/rpmctl_test.info -o $(DIST)/rpmctl_total.info
+	$(BIN_LCOV) -e $(DIST)/rpmctl_total.info "*/src/main/rpmctl/*" -o $(DIST)/rpmctl_final.info
+	$(BIN_GENHTML) $(DIST)/rpmctl_final.info -o $(DIST)/coverage
+
 ifeq ($(BIN_FIND),)
 clean:
 	rm -f $(OBJ_FILES) $(OBJ_FILES_TEST)
@@ -64,7 +75,8 @@ clean:
 else
 clean:
 	$(BIN_FIND) . -name \*.o -exec rm -f \{\} \;
-	rm -f $(OBJ_FILES) $(OBJ_FILES_TEST)
+	$(BIN_FIND) . -name \*.gcno -exec rm -f \{\} \;
+	$(BIN_FIND) . -name \*.gcda -exec rm -f \{\} \;
 	rm -rf $(DIST)
 endif
 
@@ -104,6 +116,12 @@ ifeq ($(BIN_ENV),)
 endif
 ifeq ($(BIN_FIND),)
   $(warning "find binary not found [define one using BIN_FIND variable]")
+endif
+ifeq ($(BIN_LCOV),)
+  $(warning "lcov binary not found [define one using BIN_LCOV variable]")
+endif
+ifeq ($(BIN_GENHTML),)
+  $(warning "genhtml binary not found [define one using BIN_GENHTML variable]")
 endif
 
 .SUFFIXES: .ht
