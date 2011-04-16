@@ -26,24 +26,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/ui/command.hh>
-#include <rpmctl/ui/router.hh>
-#include <rpmctl/ui/put_command.hh>
-#include <rpmctl/ui/get_command.hh>
-#include <rpmctl/ui/apply_command.hh>
+#ifndef __RPMCTL_UI_APPLY_COMMAND_HH__
+#define __RPMCTL_UI_APPLY_COMMAND_HH__
 
-int main(int argc, const char **argv)
+#include <rpmctl/ui/command.hh>
+
+namespace rpmctl
 {
-  rpmctl::ui::put_command put_command;
-  rpmctl::ui::get_command get_command;
-  rpmctl::ui::apply_command apply_command;
-  rpmctl::ui::router router;
-  router.bind("put", &put_command);
-  router.bind("get", &get_command);
-  router.bind("apply", &apply_command);
-  int exstatus = router.route(argc, argv);
-  u_cleanup();
-  return(exstatus);
+
+  namespace ui
+  {
+    class apply_command : public command
+    {
+    public:
+      apply_command();
+      virtual ~apply_command();
+
+      virtual std::string description() const;
+      
+      virtual int exec(input &, output &);
+    };
+
+  }
+
 }
 
+#endif
