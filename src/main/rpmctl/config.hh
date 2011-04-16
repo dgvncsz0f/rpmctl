@@ -35,4 +35,8 @@
 
 #define RPMCTL_VERSION "0.0.1"
 
+#ifndef RPMCTL_DEFAULT_DBHOME
+#define RPMCTL_DEFAULT_DBHOME "/var/lib/rpmctl"
+#endif
+
 #endif

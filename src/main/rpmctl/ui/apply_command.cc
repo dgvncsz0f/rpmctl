@@ -27,6 +27,7 @@
  */
 
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <popt.h>
 #include <stdexcept>
@@ -51,11 +52,11 @@ std::string rpmctl::ui::apply_command::description() const
 
 int rpmctl::ui::apply_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &output)
 {
-  char *home=NULL, *package=NULL, *file=NULL;
+  char *home=strdup(RPMCTL_DEFAULT_DBHOME), *package=NULL, *file=NULL;
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autohome(new rpmctl::autoptr_malloc_adapter(home));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autopkg(new rpmctl::autoptr_malloc_adapter(package));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autofile(new rpmctl::autoptr_malloc_adapter(file));
-  struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING, &home,    0, "Specify a home directory for the database environment [default=/var/lib/rpmctl]", NULL },
+  struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &home,    0, "Specify a home directory for the database environment", NULL },
                                   { "package",   'p',  POPT_ARG_STRING, &package, 0, "the name of a rpm package", NULL },
                                   { "file",      'f',  POPT_ARG_STRING, &file,    0, "The name of a file", NULL },
                                   POPT_TABLEEND

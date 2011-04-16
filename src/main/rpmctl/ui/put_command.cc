@@ -27,8 +27,10 @@
  */
 
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <popt.h>
+#include <rpmctl/config.hh>
 #include <rpmctl/bdb_environment.hh>
 #include <rpmctl/autoptr_malloc_adapter.hh>
 #include <rpmctl/ui/router.hh>
@@ -47,12 +49,12 @@ std::string rpmctl::ui::put_command::description() const
 
 int rpmctl::ui::put_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &output)
 {
-  char *home=NULL, *ns=NULL, *key=NULL, *val=NULL;
+  char *home=strdup(RPMCTL_DEFAULT_DBHOME), *ns=NULL, *key=NULL, *val=NULL;
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autohome(new rpmctl::autoptr_malloc_adapter(home));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autons(new rpmctl::autoptr_malloc_adapter(ns));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autokey(new rpmctl::autoptr_malloc_adapter(key));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autoval(new rpmctl::autoptr_malloc_adapter(val));
-  struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING, &home, 0, "Specify a home directory for the database environment [default=/var/lib/rpmctl]", NULL },
+  struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &home, 0, "Specify a home directory for the database environment", NULL },
                                   { "namespace", 'n',  POPT_ARG_STRING, &ns,   0, "the package name", NULL },
                                   { "key",       'k',  POPT_ARG_STRING, &key,  0, "The name of the variable", NULL },
                                   { "value",     'v',  POPT_ARG_STRING, &val,  0, "The value to assign to this variable", NULL },
