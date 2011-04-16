@@ -26,28 +26,71 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <cstdio>
 #include <cstdlib>
+#include <unicode/ustdio.h>
 #include <UnitTest++.h>
-#include <rpmctl/scoped_tmpfh.hh>
+#include <rpmctl/scoped_fh.hh>
+#include <rpmctl/scoped_file.hh>
 #include <rpmctl_test/helpers/file_utils.hh>
 
 namespace rpmctl_test
 {
 
-  TEST(scoped_tmpfh_removes_files_when_dctor_is_invoked)
+  TEST(scoped_fh_keeps_file_open_while_object_is_valid)
   {
-    std::string tmpfile;
-    {
-      rpmctl::scoped_tmpfh fh;
-      tmpfile = fh.tmpfile();
-    }
-    CHECK(! rpmctl_test::file_exists(tmpfile));
+    std::string file = ".scoped_fh_test#1";
+    rpmctl::scoped_file tmp(file);
+
+    rpmctl::scoped_fh fh(file, "w");
+    int fd = fileno(u_fgetfile(*fh));
+    CHECK(fd>0);
   }
 
-  TEST(scoped_tmpfh_creates_file_and_let_it_available_durint_the_liftime_of_the_object)
+  TEST(scoped_fh_keeps_closes_file_after_dctor_is_invoked)
   {
-    rpmctl::scoped_tmpfh fh;
-    CHECK(rpmctl_test::file_exists(fh.tmpfile()));
+    std::string file = ".scoped_fh_test#2";
+    rpmctl::scoped_file tmp(file);
+
+    int fd = -1;
+    {
+      rpmctl::scoped_fh fh(file, "w");
+      fd = fileno(u_fgetfile(*fh));
+    }
+
+    struct stat x;
+    CHECK(fstat(fd, &x) == -1);
+    CHECK(errno == EBADF);
+  }
+
+  TEST(scoped_fh_open_method_closes_previously_opened_file)
+  {
+    std::string file = ".scoped_fh_test#3";
+    rpmctl::scoped_file tmp1(file + "_1");
+    rpmctl::scoped_file tmp2(file + "_2");
+
+    rpmctl::scoped_fh sfh(file + "_1", "w");
+    int fd = fileno(u_fgetfile(*sfh));
+
+    struct stat old_s;
+    CHECK(fstat(fd, &old_s) == 0);
+
+    sfh.open(file + "_2", "w");
+    struct stat new_s;
+
+    int fd2 = fileno(u_fgetfile(*sfh));
+    if (fd != fd2)
+    {
+      CHECK(fstat(fd, &new_s)==-1);
+      CHECK(errno == EBADF);
+    }
+    else
+    {
+      CHECK(new_s.st_ino != old_s.st_ino);
+    }
   }
 
 }

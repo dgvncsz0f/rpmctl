@@ -27,8 +27,6 @@
  */
 
 #include <cstdlib>
-#include <cstring>
-#include <unicode/unistr.h>
 #include <UnitTest++.h>
 #include <rpmctl/scoped_file.hh>
 #include <rpmctl_test/helpers/file_utils.hh>

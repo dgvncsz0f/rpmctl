@@ -29,6 +29,14 @@
 #include <stdexcept>
 #include <rpmctl/scoped_fh.hh>
 
+static
+void __fclose(UFILE **fh)
+{
+  if (*fh != NULL)
+    u_fclose(*fh);
+  *fh = NULL;
+}
+
 rpmctl::scoped_fh::scoped_fh(const std::string &file, const std::string &mode) :
   _fh(NULL)
 {
@@ -41,6 +49,7 @@ rpmctl::scoped_fh::scoped_fh() :
 
 void rpmctl::scoped_fh::open(const std::string &file, const std::string &mode)
 {
+  __fclose(&_fh);
   UFILE *fh = u_fopen(file.c_str(), mode.c_str(), NULL, NULL);
   if (fh == NULL)
     throw(std::runtime_error("could not open file: " + file));
@@ -54,6 +63,5 @@ UFILE *rpmctl::scoped_fh::operator*() const
 
 rpmctl::scoped_fh::~scoped_fh()
 {
-  if (_fh != NULL)
-    u_fclose(_fh);
+  __fclose(&_fh);
 }
