@@ -70,6 +70,8 @@ namespace rpmctl
       void print_help(const std::map<std::string, command *> &);
       void print_help(struct poptOption *);
 
+      void print_version();
+
       bool validates_notnull(void *, const std::string &);
 
       void print_error(const std::string &);

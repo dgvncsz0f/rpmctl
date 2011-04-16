@@ -33,4 +33,6 @@
 #define RPMCTL_MAXBUFSZ 8192
 #endif
 
+#define RPMCTL_VERSION "0.0.1"
+
 #endif

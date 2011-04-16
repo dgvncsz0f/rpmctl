@@ -33,6 +33,7 @@
 #include <sstream>
 #include <string>
 #include <popt.h>
+#include <rpmctl/config.hh>
 #include <rpmctl/autoptr_array_adapter.hh>
 #include <rpmctl/autoptr_malloc_adapter.hh>
 #include <rpmctl/ui/router.hh>
@@ -179,6 +180,26 @@ void rpmctl::ui::output::print_help(struct poptOption *options)
   poptFreeContext(optctx);
 }
 
+void rpmctl::ui::output::print_version()
+{
+  std::cout << _progname
+            << " version "
+            << RPMCTL_VERSION
+            << std::endl
+            << std::endl
+            << "Copyright (C) 2011 Diego Souza."
+            << std::endl
+            << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>."
+            << std::endl
+            << "This is free software: you are free to change and redistribute it."
+            << std::endl
+            << "There is NO WARRANTY, to the extent permitted by law."
+            << std::endl
+            << std::endl
+            << "Written by dsouza <dsouza at bitforest.org>"
+            << std::endl;
+}
+
 const std::string &rpmctl::ui::output::progname() const
 {
   return(_progname);
@@ -225,7 +246,12 @@ int rpmctl::ui::router::route(int argc, const char **argv)
   int exstatus=EXIT_SUCCESS;
   const char *cmdstr = poptGetArg(optctx);
   std::map<std::string, rpmctl::ui::command*>::const_iterator it = _table.find(cmdstr==NULL ? "" : cmdstr);
-  if (it!=_table.end())
+  if (version)
+  {
+    rpmctl::ui::output output(options, argv[0]);
+    output.print_version();
+  }
+  else if (it!=_table.end())
   {
     std::auto_ptr<autoptr_malloc_adapter> auto_newargv(new autoptr_malloc_adapter(std::malloc(sizeof(char*) * argc)));
     const char **newargv = static_cast<const char**>(**auto_newargv);
