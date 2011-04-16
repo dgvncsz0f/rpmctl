@@ -6,12 +6,12 @@ The problem we are trying to solve is very specific to our needs. We use RPM to 
 1 Minute Tutorial
 =================
 
-This software provides a simple templating system that can be used to customize configuration files. For instance, suppose you have a package, say *foobar*, which installs a config file under */etc/foobar/file.conf* with the following content::
+This software provides a simple templating system that can be used to customize configuration files. For instance, suppose you have a package, say *foobar*, which installs a config file under */etc/foobar/file.conf* [#]_ with the following content::
+
+.. [#] Bear in mind that you can use this in any *text file* owned by a RPM package.
 
   hostname: $(hostname)
   chroot: $(foobar::chroot)
-
-Keep in mind that this file is just an example. It could be an *Apache* config file, a *XML*, *YAML* or any other text file you might have.
 
 The file above defined two variables, which are enclosed between `$(` and `)` characters, namely `$(hostname)` and `$(foobar::chroot)`. The former uses the package name implicitly while the later uses the package name explicitly, allowing you to refer to variables in different packages. The first time this package is installed, these variables will probably be undefined. To define them::
 
@@ -24,15 +24,15 @@ This will define these two variables, which will be persisted into a local datab
   # alternatively, which makes rpmctl to check on the package for %config entries
   $ rpmctl apply -p foobar
 
-The config file should now look like something like this::
+The config file should now look like this::
 
   $ cat /etc/foobar/file.conf
   hostname: 127.0.0.1
   chroot: /var/jails/0
 
-You may do these steps again (*put* + *apply*) and the new variables will be redefined. Rpmctl accomplishes this by reading the default config file from the package before applying the changes.
+You may do these steps again (*put* + *apply*) and the new variables will be redefined. Rpmctl accomplishes this by reading the original file from the package before applying the changes.
 
-There are more commands available, other than *put* and *apply*, but this should give a good overview of what it does.
+There are more commands available, other than *put* and *apply*, but this should give you a good overview of what it does.
 
 Dependencies
 ============
