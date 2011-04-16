@@ -28,6 +28,7 @@
 BIN_FIND  = $(shell which find 2>/dev/null)
 BIN_TEST  = $(shell which test 2>/dev/null)
 BIN_TOUCH = $(shell which touch 2>/dev/null)
+BIN_ENV   = $(shell which env 2>/dev/null)
 
 INC_FILES = $(wildcard src/main/rpmctl/*.hh) $(wildcard src/main/rpmctl/ui/*.hh) 
 TPL_FILES = $(wildcard src/main/rpmctl/*.ht)
@@ -54,7 +55,7 @@ build:
 
 tests:
 	@$(MAKE) __build_test
-	@$(DIST)/bin/$(TEST)
+	/usr/bin/env MALLOC_CHECK_=2 $(DIST)/bin/$(TEST)
 
 ifeq ($(BIN_FIND),)
 clean:
@@ -97,6 +98,9 @@ ifeq ($(BIN_TOUCH),)
 endif
 ifeq ($(CXX),)
   $(error "c++ compiler not found [define one using CXX variable]")
+endif
+ifeq ($(BIN_ENV),)
+  $(error "env binary not found [define one using BIN_ENV variable]"
 endif
 ifeq ($(BIN_FIND),)
   $(warning "find binary not found [define one using BIN_FIND variable]")
