@@ -25,12 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-BIN_FIND    = $(shell which find 2>/dev/null)
-BIN_TEST    = $(shell which test 2>/dev/null)
-BIN_TOUCH   = $(shell which touch 2>/dev/null)
-BIN_ENV     = $(shell which env 2>/dev/null)
-BIN_LCOV    = $(shell which lcov 2>/dev/null)
-BIN_GENHTML = $(shell which genhtml 2>/dev/null)
+BIN_FIND      = $(shell which find 2>/dev/null)
+BIN_TEST      = $(shell which test 2>/dev/null)
+BIN_TOUCH     = $(shell which touch 2>/dev/null)
+BIN_ENV       = $(shell which env 2>/dev/null)
+BIN_LCOV      = $(shell which lcov 2>/dev/null)
+BIN_GENHTML   = $(shell which genhtml 2>/dev/null)
+BIN_ICUCONFIG = $(shell which icu-config 2>/dev/null)
 
 INC_FILES = $(wildcard src/main/rpmctl/*.hh) $(wildcard src/main/rpmctl/ui/*.hh) 
 TPL_FILES = $(wildcard src/main/rpmctl/*.ht)
@@ -46,8 +47,9 @@ MAIN = rpmctl
 
 DIST = $(CURDIR)/dist
 
-override CPPFLAGS += -W -Wall -pedantic -fPIC -Isrc/main -Isrc/test
-override LDFLAGS  += 
+override CXXFLAGS += -W -Wall -pedantic -Wpointer-arith -Wwrite-strings
+override CPPFLAGS += -Isrc/main -Isrc/test
+override LDFLAGS  += $(shell $(BIN_ICUCONFIG) --ldflags-system --ldflags-libsonly --ldflags-icuio) -ldb_cxx -lpopt
 
 compile:
 	$(MAKE) __compile_obj
@@ -60,7 +62,7 @@ tests:
 	/usr/bin/env MALLOC_CHECK_=3 $(DIST)/bin/$(TEST)
 
 coverage: clean
-	@$(MAKE) "CPPFLAGS=--coverage -fno-implicit-inline-templates -fno-default-inline $(CPPFLAGS)" "LDFLAGS=$(LDFLAGS) -lgcov" __build_test
+	@$(MAKE) "CPPFLAGS=--coverage -fno-implicit-inline-templates -fno-default-inline $(CPPFLAGS)" __build_test
 	$(BIN_LCOV) -c -i -b $(CURDIR) -d $(CURDIR) -o $(DIST)/rpmctl_base.info
 	$(BIN_ENV) MALLOC_CHECK_=3 $(DIST)/bin/$(TEST)
 	$(BIN_LCOV) -c -b $(CURDIR) -d $(CURDIR) -o $(DIST)/rpmctl_test.info
@@ -82,11 +84,11 @@ endif
 
 %/bin/$(TEST): src/test/run_tests.cc $(OBJ_FILES) $(OBJ_FILES_TEST)
 	$(BIN_TEST) -d $(dir $(@)) || mkdir -p $(dir $(@))
-	$(CXX) $(CPPFLAGS) -o$(@) $(^) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o$(@) $(^) $(LDFLAGS)
 
 %/bin/$(MAIN): src/main/rpmctl.cc $(OBJ_FILES)
 	$(BIN_TEST) -d $(dir $(@)) || mkdir -p $(dir $(@))
-	$(CXX) $(CPPFLAGS) -o$(@) $(^) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o$(@) $(^) $(LDFLAGS)
 
 %.cc : %.hh
 	$(BIN_TOUCH) $(@)
@@ -95,11 +97,11 @@ $(OBJ_FILES): $(TPL_FILES)
 
 __compile_obj: $(OBJ_FILES)
 
-__build_main: LDFLAGS += -lpopt -licuio -licuuc -ldb_cxx
+__build_main: LDFLAGS += 
 __build_main: $(DIST)/bin/$(MAIN)
 
 __build_test: CPPFLAGS += -I/usr/include/unittest++
-__build_test: LDFLAGS  += -lpopt -licuio -licuuc -ldb_cxx -lboost_filesystem -lboost_system -lunittest++
+__build_test: LDFLAGS  += -ldb_cxx -lboost_filesystem -lboost_system -lunittest++ -lgcov
 __build_test: __compile_obj $(DIST)/bin/$(TEST)
 
 ifeq ($(BIN_TEST),)
@@ -112,7 +114,10 @@ ifeq ($(CXX),)
   $(error "c++ compiler not found [define one using CXX variable]")
 endif
 ifeq ($(BIN_ENV),)
-  $(error "env binary not found [define one using BIN_ENV variable]"
+  $(error "env binary not found [define one using BIN_ENV variable]")
+endif
+ifeq ($(BIN_ICUCONFIG),)
+  $(error "icu-config binary no found [define one using BIN_ICUCONFIG variable]")
 endif
 ifeq ($(BIN_FIND),)
   $(warning "find binary not found [define one using BIN_FIND variable]")

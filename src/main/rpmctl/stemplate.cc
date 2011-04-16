@@ -29,6 +29,7 @@
 #include <libgen.h>
 #include <stdexcept>
 #include <cstdio>
+#include <cstdlib>
 #include <string.h>
 #include <unicode/ustdio.h>
 #include <rpmctl/stemplate.hh>

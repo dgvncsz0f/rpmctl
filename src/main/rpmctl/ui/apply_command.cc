@@ -32,6 +32,7 @@
 #include <popt.h>
 #include <stdexcept>
 #include <unicode/ustream.h>
+#include <rpmctl/config.hh>
 #include <rpmctl/bdb_environment.hh>
 #include <rpmctl/stemplate.hh>
 #include <rpmctl/parser.hh>
