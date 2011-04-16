@@ -55,7 +55,7 @@ build:
 
 tests:
 	@$(MAKE) __build_test
-	/usr/bin/env MALLOC_CHECK_=2 $(DIST)/bin/$(TEST)
+	/usr/bin/env MALLOC_CHECK_=3 $(DIST)/bin/$(TEST)
 
 ifeq ($(BIN_FIND),)
 clean:
