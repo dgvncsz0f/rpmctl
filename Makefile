@@ -60,7 +60,7 @@ tests:
 	/usr/bin/env MALLOC_CHECK_=3 $(DIST)/bin/$(TEST)
 
 coverage: clean
-	@$(MAKE) "CPPFLAGS=--coverage $(CPPFLAGS)" "LDFLAGS=$(LDFLAGS) -lgcov" __build_test
+	@$(MAKE) "CPPFLAGS=--coverage -fno-implicit-inline-templates -fno-default-inline $(CPPFLAGS)" "LDFLAGS=$(LDFLAGS) -lgcov" __build_test
 	$(BIN_LCOV) -c -i -b $(CURDIR) -d $(CURDIR) -o $(DIST)/rpmctl_base.info
 	$(BIN_ENV) MALLOC_CHECK_=3 $(DIST)/bin/$(TEST)
 	$(BIN_LCOV) -c -b $(CURDIR) -d $(CURDIR) -o $(DIST)/rpmctl_test.info

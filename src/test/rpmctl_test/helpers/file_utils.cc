@@ -28,6 +28,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <dirent.h>
+#include <cstring>
 #include <rpmctl/scoped_fh.hh>
 #include <rpmctl_test/helpers/file_utils.hh>
 
@@ -59,4 +61,57 @@ bool rpmctl_test::file_exists(const std::string &file)
 void rpmctl_test::touch(const std::string &file)
 {
   close(open(file.c_str(), O_CREAT|O_WRONLY));
+}
+
+void rpmctl_test::cleanupdir(const std::string &file)
+{
+  struct stat x;
+  if (stat(file.c_str(), &x)==0)
+  {
+    if (S_ISDIR(x.st_mode))
+    {
+      DIR *p = opendir(file.c_str());
+      struct dirent *e;
+      while ((e=readdir(p))!=NULL)
+      {
+        if (std::strcmp(e->d_name, ".")!=0 && std::strcmp(e->d_name, "..")!=0 && std::strcmp(e->d_name, ".gitkeep")!=0)
+        {
+          boost::filesystem::path me(file);
+          rpmctl_test::rm_rf((me / e->d_name).string());
+        }
+      }
+      closedir(p);
+    }
+    else if (S_ISLNK(x.st_mode) || S_ISREG(x.st_mode))
+    {
+      unlink(file.c_str());
+    }
+  }
+}
+
+void rpmctl_test::rm_rf(const std::string &file)
+{
+  struct stat x;
+  if (stat(file.c_str(), &x)==0)
+  {
+    if (S_ISDIR(x.st_mode))
+    {
+      DIR *p = opendir(file.c_str());
+      struct dirent *e;
+      while ((e=readdir(p))!=NULL)
+      {
+        if (std::strcmp(e->d_name, ".")!=0 && std::strcmp(e->d_name, "..")!=0 && std::strcmp(e->d_name, ".gitkeep")!=0)
+        {
+          boost::filesystem::path me(file);
+          rpmctl_test::rm_rf((me / e->d_name).string());
+        }
+      }
+      rmdir(file.c_str());
+      closedir(p);
+    }
+    else if (S_ISLNK(x.st_mode) || S_ISREG(x.st_mode))
+    {
+      unlink(file.c_str());
+    }
+  }
 }

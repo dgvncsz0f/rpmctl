@@ -3,3 +3,4 @@ dist/
 .#*
 *.gcno
 *.gcda
+src/test/fixtures/tmp/
