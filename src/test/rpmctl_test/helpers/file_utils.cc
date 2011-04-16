@@ -25,7 +25,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <rpmctl/scoped_fh.hh>
 #include <rpmctl_test/helpers/file_utils.hh>
 
@@ -52,4 +54,9 @@ bool rpmctl_test::file_exists(const std::string &file)
 {
   struct stat x;
   return(stat(file.c_str(), &x) == 0);
+}
+
+void rpmctl_test::touch(const std::string &file)
+{
+  close(open(file.c_str(), O_CREAT|O_WRONLY));
 }

@@ -1,9 +1,10 @@
-/* Copyright (c) 2011, Diego Souza
+/*
+ * Copyright (c) 2010, Diego Souza
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *   * Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
  *   * Redistributions in binary form must reproduce the above copyright notice,
@@ -12,7 +13,7 @@
  *   * Neither the name of the <ORGANIZATION> nor the names of its contributors
  *     may be used to endorse or promote products derived from this software
  *     without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -25,22 +26,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_TEST_FILE_UTILS__
-#define __RPMCTL_TEST_FILE_UTILS__
-
+#include <cstdlib>
+#include <cstring>
 #include <unicode/unistr.h>
-#include <boost/filesystem.hpp>
+#include <UnitTest++.h>
+#include <rpmctl/scoped_file.hh>
+#include <rpmctl_test/helpers/file_utils.hh>
 
 namespace rpmctl_test
 {
 
-  boost::filesystem::path fixtures_path();
+  TEST(scoped_file_removes_files_when_dctor_is_invoked)
+  {
+    std::string file = ".scope_file_test#1";
+    {
+      rpmctl::scoped_file sfile(file);
+      rpmctl_test::touch(file);
+      CHECK(rpmctl_test::file_exists(file));
+    }
+    CHECK(! rpmctl_test::file_exists(file));
+  }
 
-  UnicodeString read_file(const std::string &);
+  TEST(scoped_file_star_operator_returns_the_path_name)
+  {
+    std::string file = ".scoped_file_test#2";
+    rpmctl::scoped_file sfile(file);
+    CHECK(".scoped_file_test#2" == (*sfile));
+  }
 
-  bool file_exists(const std::string &);
-
-  void touch(const std::string &);
 }
-
-#endif
