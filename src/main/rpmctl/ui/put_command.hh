@@ -41,6 +41,8 @@ namespace rpmctl
     public:
       put_command();
       virtual ~put_command();
+
+      virtual std::string description() const;
       
       virtual int exec(input &, output &);
     };

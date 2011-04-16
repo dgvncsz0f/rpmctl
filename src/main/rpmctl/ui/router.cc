@@ -38,6 +38,15 @@
 #include <rpmctl/ui/router.hh>
 #include <rpmctl/ui/command.hh>
 
+#define __MYMAX(a,b) (a<b ? b : a)
+
+static
+void __rpad(std::string &o, int by)
+{
+  for (int i=0; i<by; i+=1)
+    o += " ";
+}
+
 static
 int __without_globals(const char **newargv, int argc, const char **argv)
 {
@@ -121,18 +130,28 @@ void rpmctl::ui::output::print_help()
   poptFreeContext(optctx);
 }
 
-void rpmctl::ui::output::print_help(const std::vector<std::string> &commands)
+void rpmctl::ui::output::print_help(const std::map<std::string,command *> &commands)
 {
   print_help();
   
   std::cout << std::endl
             << "Available commands:"
             << std::endl;
-  std::vector<std::string>::const_iterator it;
+  std::map<std::string,command *>::const_iterator it;
+
+  unsigned int maxlen=0;
   for (it=commands.begin(); it!=commands.end(); it++)
   {
+    maxlen = __MYMAX(maxlen, it->first.length());
+  }
+  for (it=commands.begin(); it!=commands.end(); it++)
+  {
+    std::string spacer("   ");
+    __rpad(spacer, maxlen-it->first.length());
     std::cout << "    "
-              << *it
+              << it->first
+              << spacer
+              << it->second->description()
               << std::endl;
   }
   std::cout << std::endl
@@ -186,15 +205,6 @@ rpmctl::ui::router::router()
 rpmctl::ui::router::~router()
 {}
 
-std::vector<std::string> rpmctl::ui::router::commands() const
-{
-  std::vector<std::string> v;
-  std::map<std::string, rpmctl::ui::command*>::const_iterator it;
-  for (it=_table.begin(); it!=_table.end(); it++)
-    v.push_back(it->first);
-  return(v);
-}
-
 void rpmctl::ui::router::bind(const std::string &name, rpmctl::ui::command *command)
 {
   _table[name] = command;
@@ -232,7 +242,7 @@ int rpmctl::ui::router::route(int argc, const char **argv)
   {
     rpmctl::ui::output output(options, argv[0]);
     if (rc == -1)
-      output.print_help(commands());
+      output.print_help(_table);
     else
       output.print_error(optctx, rc);
   }

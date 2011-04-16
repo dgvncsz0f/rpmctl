@@ -45,6 +45,8 @@ namespace rpmctl
     public:
       virtual ~command();
 
+      virtual std::string description() const = 0;
+
       /*! Invokes this command. You should not invoke this directly, use the router instead.
        */
       virtual int exec(input &, output &) = 0;

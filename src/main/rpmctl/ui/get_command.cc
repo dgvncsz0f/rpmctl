@@ -41,6 +41,11 @@ rpmctl::ui::get_command::get_command()
 rpmctl::ui::get_command::~get_command()
 {}
 
+std::string rpmctl::ui::get_command::description() const
+{
+  return("show values of variables");
+}
+
 int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &output)
 {
   char *home=NULL, *ns=NULL, *key=NULL;

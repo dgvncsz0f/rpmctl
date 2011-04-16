@@ -40,6 +40,11 @@ rpmctl::ui::put_command::put_command()
 rpmctl::ui::put_command::~put_command()
 {}
 
+std::string rpmctl::ui::put_command::description() const
+{
+  return("define variables");
+}
+
 int rpmctl::ui::put_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &output)
 {
   char *home=NULL, *ns=NULL, *key=NULL, *val=NULL;
