@@ -28,54 +28,23 @@
 
 #include <unicode/unistr.h>
 #include <UnitTest++.h>
-#include <rpmctl/bdb_environment.hh>
+#include <rpmctl/environment.hh>
 #include <rpmctl_test/helpers/file_utils.hh>
 
 namespace rpmctl_test
 {
 
-  std::string bdb_environment_setup()
+  TEST(nil_env_get_should_return_the_default)
   {
-    boost::filesystem::path file = fixtures_path() / "tmp";
-    rpmctl_test::cleanupdir(file.string());
-    return(file.string());
-  }
-
-  TEST(bdb_environment_get_should_return_the_default_when_variable_is_not_defined)
-  {
-    std::string dbhome = bdb_environment_setup();
-    rpmctl::bdb_environment env(dbhome);
+    rpmctl::nil_env env;
     CHECK(UnicodeString("default") == env.get("namespace", "foobar", "default"));
   }
 
-  TEST(bdb_environment_get_should_return_the_variable_defined_in_previous_put_invocation)
+  TEST(nil_env_put_should_discard_the_data_so_that_get_returns_always_the_default)
   {
-    std::string dbhome = bdb_environment_setup();
-    rpmctl::bdb_environment env(dbhome);
-    env.put("namespace", "foobar", "foobar");
-    CHECK(UnicodeString("foobar") == env.get("namespace", "foobar", "default"));
-  }
-
-  TEST(bdb_environment_put_should_perform_durable_updates)
-  {
-    std::string dbhome = bdb_environment_setup();
-    {
-      rpmctl::bdb_environment env(dbhome);
-      env.put("namespace", "foobar", "foobar");
-    }
-    rpmctl::bdb_environment env(dbhome);
-    CHECK(UnicodeString("foobar") == env.get("namespace", "foobar", "default"));
-  }
-
-  TEST(bdb_environment_ctor_should_raise_exception_if_cant_create_database)
-  {
-    try
-    {
-      rpmctl::bdb_environment env("/some/nonsense/path");
-      CHECK(false);
-    }
-    catch (const rpmctl::rpmctl_except &)
-    {}
+    rpmctl::nil_env env;
+    env.put("namespace", "foobar", "dummy");
+    CHECK(UnicodeString("default") == env.get("namespace", "foobar", "default"));
   }
 
 }
