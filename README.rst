@@ -8,8 +8,6 @@ The problem we are trying to solve is very specific to our needs. We use RPM to 
 
 This software provides a simple templating system that can be used to customize configuration files. For instance, suppose you have a package, say *foobar*, which installs a config file under */etc/foobar/file.conf* [#]_ with the following content::
 
-.. [#] Bear in mind that you can use this in any *text file* owned by a RPM package.
-
   hostname: $(hostname)
   chroot: $(foobar::chroot)
 
@@ -81,3 +79,5 @@ References
 ==========
 
 This has been heavily inspired by *yinst*, the official Yahoo! package manager [as of early 2011]. This functionality is built-in into the tool, which is something I considered to be a very useful featured for a package manager to have.
+
+.. [#] Bear in mind that you can use this in any *text file* owned by a RPM package.
