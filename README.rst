@@ -64,6 +64,12 @@ Testing
 
   $ make tests
 
+Alternatively you may invoke::
+
+  $ make coverage
+
+And code coverage (using gcov + lcov) data, in HTML format, will available at dist/coverage directory.
+
 TODO
 ====
 
