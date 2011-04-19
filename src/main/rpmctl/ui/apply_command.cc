@@ -58,8 +58,8 @@ int rpmctl::ui::apply_command::exec(rpmctl::ui::input &input, rpmctl::ui::output
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autopkg(new rpmctl::autoptr_malloc_adapter(package));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autofile(new rpmctl::autoptr_malloc_adapter(file));
   struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &home,    0, "Specify a home directory for the database environment", NULL },
-                                  { "package",   'p',  POPT_ARG_STRING, &package, 0, "the name of a rpm package", NULL },
-                                  { "file",      'f',  POPT_ARG_STRING, &file,    0, "The name of a file", NULL },
+                                  { "namespace", 'n',  POPT_ARG_STRING,                           &package, 0, "the name of a rpm package", NULL },
+                                  { "file",      'f',  POPT_ARG_STRING,                           &file,    0, "The name of a file", NULL },
                                   POPT_TABLEEND
                                 };
   
