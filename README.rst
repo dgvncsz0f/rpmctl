@@ -18,9 +18,9 @@ The file above defined two variables, which are enclosed between `$(` and `)` ch
 
 This will define these two variables, which will be persisted into a local database. Invoking the command *apply* should expand this variables, replacing them by the values you have just defined::
 
-  $ rpmctl apply -p foobar -f /etc/foobar/file.conf
+  $ rpmctl apply -n foobar -f /etc/foobar/file.conf
   # alternatively, which makes rpmctl to check on the package for %config entries
-  $ rpmctl apply -p foobar
+  $ rpmctl apply -n foobar
 
 The config file should now look like this::
 
@@ -37,6 +37,7 @@ Dependencies
 
   * icu [http://site.icu-project.org/]
   * popt [http://rpm5.org/]
+  * libarchive [http://code.google.com/p/libarchive/]
   * Berkeley DB [http://www.oracle.com/technetwork/database/berkeleydb/overview/index.html]
 
 Testing
@@ -72,7 +73,8 @@ TODO
 ====
 
   * finish the *RPM* integration;
-  * provide the *CLI* as stated previously;
+  * multiple keys in put/get commands;
+  * support for rpm relocation feature;
   * fix the compatibility problems with big/little endian architectures;
 
 References
