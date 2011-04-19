@@ -26,29 +26,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/ui/command.hh>
-#include <rpmctl/ui/router.hh>
-#include <rpmctl/ui/put_command.hh>
-#include <rpmctl/ui/get_command.hh>
-#include <rpmctl/ui/apply_command.hh>
-
+#include <rpm/rpmtag.h>
+#include <rpm/rpmio.h>
+#include <rpm/rpmts.h>
+#include <archive.h>
 #include <rpmctl/rpm.hh>
-#include <string>
-#include <vector>
-#include <iostream>
 
-int main(int argc, const char **argv)
+rpmctl::rpm::rpm(const std::string &rpm) throw (rpmctl::rpmctl_except) :
+  _rpm(rpm)
 {
-  rpmctl::ui::put_command put_command;
-  rpmctl::ui::get_command get_command;
-  rpmctl::ui::apply_command apply_command;
-  rpmctl::ui::router router;
-  router.bind("put", &put_command);
-  router.bind("get", &get_command);
-  router.bind("apply", &apply_command);
-  int exstatus = router.route(argc, argv);
-  u_cleanup();
-  return(exstatus);
+  rpmReadConfigFiles(NULL, NULL);
+  FD_t fd = Fopen(rpm.c_str(), "r.ufdio");
+  if (Ferror(fd))
+    throw(rpmctl::rpmctl_except(Fstrerror(fd)));
+
+  rpmts ts = rpmtsCreate();
+  rpmVSFlags flags = rpmVSFlags(_RPMVSF_NODIGESTS | _RPMVSF_NOSIGNATURES | RPMVSF_NOHDRCHK);
+  rpmtsSetVSFlags(ts, flags);
+  int rc = rpmReadPackageFile(ts, fd, rpm.c_str(), &_rpmhdr);
+  Fclose(fd);
+  rpmtsFree(ts);
+
+  switch (rc)
+  {
+  case RPMRC_OK:
+  case RPMRC_NOKEY:
+  case RPMRC_NOTTRUSTED:
+    break;
+  case RPMRC_NOTFOUND:
+    throw(rpmctl::rpmctl_except("file is not an RPM package"));
+  case RPMRC_FAIL:
+  default:
+    throw(rpmctl::rpmctl_except("error reading header from package"));
+  }
 }
 
+rpmctl::rpm::~rpm()
+{}
+
+void rpmctl::rpm::conffiles(std::vector<std::string> &out)
+{
+  rpmfi fi = rpmfiNew(NULL, _rpmhdr, RPMTAG_BASENAMES, rpmfiFlags(RPMFI_FLAGS_QUERY));
+  fi = rpmfiInit(fi, 0);
+  while (rpmfiNext(fi)!=-1)
+  {
+    rpmfileAttrs attrs = rpmfiFFlags(fi);
+    if (attrs & RPMFILE_CONFIG)
+      out.push_back(rpmfiFN(fi));
+  }
+  rpmfiFree(fi);
+}
+
+void rpmctl::rpm::read_file(const std::string &, rpm_read_sink &)
+{
+  throw(std::runtime_error("TODO:fixme"));
+}

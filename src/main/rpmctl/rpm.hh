@@ -26,29 +26,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/ui/command.hh>
-#include <rpmctl/ui/router.hh>
-#include <rpmctl/ui/put_command.hh>
-#include <rpmctl/ui/get_command.hh>
-#include <rpmctl/ui/apply_command.hh>
+#ifndef __RPMCTL_RPM_HH__
+#define __RPMCTL_RPM_HH__
 
-#include <rpmctl/rpm.hh>
 #include <string>
 #include <vector>
-#include <iostream>
+#include <rpm/rpmlib.h>
+#include <rpmctl/excepts.hh>
 
-int main(int argc, const char **argv)
+namespace rpmctl
 {
-  rpmctl::ui::put_command put_command;
-  rpmctl::ui::get_command get_command;
-  rpmctl::ui::apply_command apply_command;
-  rpmctl::ui::router router;
-  router.bind("put", &put_command);
-  router.bind("get", &get_command);
-  router.bind("apply", &apply_command);
-  int exstatus = router.route(argc, argv);
-  u_cleanup();
-  return(exstatus);
+
+  class rpm_read_sink
+  {
+  public:
+    virtual ~rpm_read_sink();
+
+    /*! Gets a given amount of data. NULL is sent when EOF is reached.
+     *
+     * \param Bytes read from file;
+     * \param Number os bytes read;
+     */
+    virtual void operator()(const char *, ssize_t);
+  };
+
+  class rpm
+  {
+  public:
+    rpm(const std::string &) throw (rpmctl_except);
+    ~rpm();
+
+    /*! Extracts all config files declared in the package provided in
+     *  the ctor of this class.
+     *
+     *  \param The container that will take the config file names;
+     */
+    void conffiles(std::vector<std::string> &);
+    
+    /*! Reads the content of a file inside a RPM package invoking
+     *  rpm_read_file_callback repeatedly until the contents of the
+     *  file are consumed.
+     *
+     *  \param The file you want to read from the RPM package;
+     *  \param The object that will handle the contents of the file;
+     */
+    void read_file(const std::string &file, rpm_read_sink &);
+
+  private:
+    const std::string _rpm;
+    Header _rpmhdr;
+  };
+
 }
 
+#endif

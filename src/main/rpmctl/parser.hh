@@ -117,6 +117,7 @@ namespace rpmctl
     virtual void on_error(T *) = 0;
   };
 
+  // TODO: use abstract data sources
   template<typename T>
   class parser
   {
@@ -129,65 +130,65 @@ namespace rpmctl
     void run(const std::string &file)
     {
       T *data = _e.on_start(file);
-
+      
       try
       {
-	rpmctl::scoped_fh fh(file, "r");
-
-	UnicodeString txt;
-	while (!u_feof(*fh))
-	{
-	  __exread(txt, *fh, RPMCTL_MAXBUFSZ);
-	  do
-	  {
-	    int32_t n = txt.indexOf("$(");
-	    if (n==-1)
-	    {
-	      _e.on_text(txt.tempSubString(0, txt.length()-1), data);
-	      txt.remove(0, txt.length()-1);
-	      break;
-	    }
-	    else
-	    {
-	      int32_t m = txt.indexOf(")", n);
-	      if (m!=-1)
-	      {
-		_e.on_text(txt.tempSubString(0, n), data);
-
-		UnicodeString var = txt.tempSubString(n+2, m-n-2);
-		int32_t pos       = var.indexOf("::");
-		if (pos != -1) {
-		  _e.on_qualified_variable( txt.tempSubString(n+2, pos),
-					    txt.tempSubString(n+4+pos, m-n-4-pos),
-					    data
-		                          );
-		}
-		else
-		{
-		  _e.on_variable(_ns, var, data);
-		}
-		txt.remove(0, m+1);
-	      }
-	      else
-	      {
-		_e.on_text(txt.tempSubString(0, n), data);
-		txt.remove(0, n);
-		break;
-	      }
-	    }
-	  } while (true);
-	}
-
-	_e.on_text(txt, data);
-	_e.on_eof(data);
+        rpmctl::scoped_fh fh(file, "r");
+        
+        UnicodeString txt;
+        while (!u_feof(*fh))
+        {
+          __exread(txt, *fh, RPMCTL_MAXBUFSZ);
+          do
+          {
+            int32_t n = txt.indexOf("$(");
+            if (n==-1)
+            {
+              _e.on_text(txt.tempSubString(0, txt.length()-1), data);
+              txt.remove(0, txt.length()-1);
+              break;
+            }
+            else
+            {
+              int32_t m = txt.indexOf(")", n);
+              if (m!=-1)
+              {
+                _e.on_text(txt.tempSubString(0, n), data);
+                
+                UnicodeString var = txt.tempSubString(n+2, m-n-2);
+                int32_t pos       = var.indexOf("::");
+                if (pos != -1) {
+                  _e.on_qualified_variable( txt.tempSubString(n+2, pos),
+                                            txt.tempSubString(n+4+pos, m-n-4-pos),
+                                            data
+                                          );
+                }
+                else
+                {
+                  _e.on_variable(_ns, var, data);
+                }
+                txt.remove(0, m+1);
+              }
+              else
+              {
+                _e.on_text(txt.tempSubString(0, n), data);
+                txt.remove(0, n);
+                break;
+              }
+            }
+          } while (true);
+        }
+        
+        _e.on_text(txt, data);
+        _e.on_eof(data);
       }
       catch (const std::exception &)
       {
-	_e.on_error(data);
-	throw;
+        _e.on_error(data);
+        throw;
       }
     }
-
+    
   private:
     parser_events<T> &_e;
     const UnicodeString &_ns;

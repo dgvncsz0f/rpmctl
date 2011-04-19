@@ -49,7 +49,7 @@ DIST = $(CURDIR)/dist
 
 override CXXFLAGS += -W -Wall -pedantic -Wpointer-arith -Wwrite-strings
 override CPPFLAGS += -Isrc/main
-override LDFLAGS  += $(shell $(BIN_ICUCONFIG) --ldflags-system --ldflags-libsonly --ldflags-icuio) -ldb_cxx -lpopt
+override LDFLAGS  += $(shell $(BIN_ICUCONFIG) --ldflags-system --ldflags-libsonly --ldflags-icuio) -larchive -lrpm -lrpmio -ldb_cxx -lpopt
 
 compile:
 	$(MAKE) __compile_obj

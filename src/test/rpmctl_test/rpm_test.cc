@@ -26,29 +26,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unicode/uclean.h>
-#include <rpmctl/ui/command.hh>
-#include <rpmctl/ui/router.hh>
-#include <rpmctl/ui/put_command.hh>
-#include <rpmctl/ui/get_command.hh>
-#include <rpmctl/ui/apply_command.hh>
-
+#include <cstdlib>
+#include <UnitTest++.h>
+#include <boost/filesystem.hpp>
 #include <rpmctl/rpm.hh>
-#include <string>
-#include <vector>
-#include <iostream>
+#include <rpmctl_test/helpers/file_utils.hh>
 
-int main(int argc, const char **argv)
+namespace rpmctl_test
 {
-  rpmctl::ui::put_command put_command;
-  rpmctl::ui::get_command get_command;
-  rpmctl::ui::apply_command apply_command;
-  rpmctl::ui::router router;
-  router.bind("put", &put_command);
-  router.bind("get", &get_command);
-  router.bind("apply", &apply_command);
-  int exstatus = router.route(argc, argv);
-  u_cleanup();
-  return(exstatus);
-}
 
+  TEST(rpm_ctor_raises_exception_when_files_is_not_an_rpm_package)
+  {
+    boost::filesystem::path file = fixtures_path() / "empty_file";
+    try
+    {
+      rpmctl::rpm rpm(file.string());
+      CHECK(false);
+    }
+    catch (const rpmctl::rpmctl_except &)
+    {}
+  }
+
+  TEST(rpm_conffiles_is_able_to_read_files_defined_with_config_macro_inside_a_rpm)
+  {
+    boost::filesystem::path file = fixtures_path() / "foobar.rpm";
+    rpmctl::rpm rpm(file.string());
+
+    std::vector<std::string> files;
+    rpm.conffiles(files);
+    CHECK(files.size() == 3);
+    CHECK(files[0] == "/etc/foobar/cfg1" || files[0] == "/etc/foobar/cfg2" || files[0] == "/etc/foobar/cfg3");
+    CHECK(files[1] == "/etc/foobar/cfg1" || files[1] == "/etc/foobar/cfg2" || files[1] == "/etc/foobar/cfg3");
+    CHECK(files[2] == "/etc/foobar/cfg1" || files[2] == "/etc/foobar/cfg2" || files[2] == "/etc/foobar/cfg3");
+
+  }
+
+}

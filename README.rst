@@ -72,6 +72,7 @@ And code coverage (using gcov + lcov) data, in HTML format, will available at di
 TODO
 ====
 
+  * change parser interface to use a data sources instead of receiving a file directly: this is required so we can parse the RPM config while extracting it from the package;
   * finish the *RPM* integration;
   * multiple keys in put/get commands;
   * support for rpm relocation feature;
