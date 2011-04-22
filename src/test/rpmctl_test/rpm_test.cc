@@ -61,4 +61,13 @@ namespace rpmctl_test
 
   }
 
+  TEST(rpm_conffiles_reads_nothing_if_file_has_no_config_files_defined)
+  {
+    boost::filesystem::path file = fixtures_path() / "foobar-noconf.rpm";
+    rpmctl::rpm rpm(file.string());
+
+    std::vector<std::string> files;
+    rpm.conffiles(files);
+    CHECK(files.size() == 0);
+  }
 }

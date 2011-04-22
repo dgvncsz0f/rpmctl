@@ -53,6 +53,11 @@ namespace rpmctl
   class rpm
   {
   public:
+    /*! Initializes the rpm system (rpmReadConfigFile).
+     */
+    static
+    void init();
+
     rpm(const std::string &) throw (rpmctl_except);
     ~rpm();
 

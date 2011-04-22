@@ -59,7 +59,7 @@ build:
 
 tests:
 	@$(MAKE) __build_test
-	/usr/bin/env MALLOC_CHECK_=3 $(DIST)/bin/$(TEST)
+	/usr/bin/env MALLOC_CHECK_=3 $(DIST)/bin/$(TEST) 2>/dev/null
 
 coverage: clean
 	@$(MAKE) "CPPFLAGS=--coverage -fno-implicit-inline-templates -fno-default-inline $(CPPFLAGS)" __build_test

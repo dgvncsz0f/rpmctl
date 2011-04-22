@@ -32,10 +32,14 @@
 #include <archive.h>
 #include <rpmctl/rpm.hh>
 
+void rpmctl::rpm::init()
+{
+  rpmReadConfigFiles(NULL, NULL);
+}
+
 rpmctl::rpm::rpm(const std::string &rpm) throw (rpmctl::rpmctl_except) :
   _rpm(rpm)
 {
-  rpmReadConfigFiles(NULL, NULL);
   FD_t fd = Fopen(rpm.c_str(), "r.ufdio");
   if (Ferror(fd))
     throw(rpmctl::rpmctl_except(Fstrerror(fd)));
@@ -62,7 +66,9 @@ rpmctl::rpm::rpm(const std::string &rpm) throw (rpmctl::rpmctl_except) :
 }
 
 rpmctl::rpm::~rpm()
-{}
+{
+  headerFree(_rpmhdr);
+}
 
 void rpmctl::rpm::conffiles(std::vector<std::string> &out)
 {

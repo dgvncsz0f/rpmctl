@@ -27,6 +27,7 @@
  */
 
 #include <unicode/uclean.h>
+#include <rpmctl/rpm.hh>
 #include <rpmctl/ui/command.hh>
 #include <rpmctl/ui/router.hh>
 #include <rpmctl/ui/put_command.hh>
@@ -40,6 +41,8 @@
 
 int main(int argc, const char **argv)
 {
+  rpmctl::rpm::init();
+
   rpmctl::ui::put_command put_command;
   rpmctl::ui::get_command get_command;
   rpmctl::ui::apply_command apply_command;

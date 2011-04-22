@@ -27,9 +27,11 @@
 
 #include <unicode/uclean.h>
 #include <UnitTest++.h>
+#include <rpmctl/rpm.hh>
 
 int main()
 {
+  rpmctl::rpm::init();
   int excode = UnitTest::RunAllTests();
   u_cleanup();
   return(excode);
