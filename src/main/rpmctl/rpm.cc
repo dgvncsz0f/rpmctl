@@ -30,15 +30,31 @@
 #include <rpm/rpmio.h>
 #include <rpm/rpmts.h>
 #include <archive.h>
+#include <archive_entry.h>
 #include <rpmctl/rpm.hh>
+#include <rpmctl/config.hh>
 
-void rpmctl::rpm::init()
+struct archive_handler
 {
-  rpmReadConfigFiles(NULL, NULL);
-}
+  archive_handler(FD_t fh) :
+    _fh(fh),
+    _buffer(new char[RPMCTL_MAXBUFSZ]),
+    _bufsz(RPMCTL_MAXBUFSZ)
+  {}
 
-rpmctl::rpm::rpm(const std::string &rpm) throw (rpmctl::rpmctl_except) :
-  _rpm(rpm)
+  ~archive_handler()
+  {
+    Fclose(_fh);
+    delete[](_buffer);
+  }
+
+  FD_t _fh;
+  char *_buffer;
+  size_t _bufsz;
+};
+
+static
+FD_t __read_rpm(const std::string &rpm, Header *rpmhdr)
 {
   FD_t fd = Fopen(rpm.c_str(), "r.ufdio");
   if (Ferror(fd))
@@ -47,8 +63,7 @@ rpmctl::rpm::rpm(const std::string &rpm) throw (rpmctl::rpmctl_except) :
   rpmts ts = rpmtsCreate();
   rpmVSFlags flags = rpmVSFlags(_RPMVSF_NODIGESTS | _RPMVSF_NOSIGNATURES | RPMVSF_NOHDRCHK);
   rpmtsSetVSFlags(ts, flags);
-  int rc = rpmReadPackageFile(ts, fd, rpm.c_str(), &_rpmhdr);
-  Fclose(fd);
+  int rc = rpmReadPackageFile(ts, fd, rpm.c_str(), rpmhdr);
   rpmtsFree(ts);
 
   switch (rc)
@@ -63,6 +78,63 @@ rpmctl::rpm::rpm(const std::string &rpm) throw (rpmctl::rpmctl_except) :
   default:
     throw(rpmctl::rpmctl_except("error reading header from package"));
   }
+
+  return(fd);
+}
+
+static
+FD_t __read_payload(const std::string &rpm)
+{
+  Header h;
+  std::string ioflags("r.");
+  FD_t fd = __read_rpm(rpm, &h);
+
+  const char *compr = headerGetString(h, RPMTAG_PAYLOADCOMPRESSOR);
+  if (compr == NULL)
+    ioflags += "gzip";
+  else
+    ioflags += std::string(compr);
+
+  headerFree(h);
+  FD_t gzdi = Fdopen(fd, ioflags.c_str());
+  if (gzdi == NULL)
+    throw(rpmctl::rpmctl_except(Fstrerror(gzdi)));
+  return(gzdi);
+}
+
+static
+ssize_t __myread(struct archive *, void *data, const void **buff)
+{
+  archive_handler *handle = static_cast<archive_handler*>(data);
+  *buff = handle->_buffer;
+  return(Fread(handle->_buffer, sizeof(char), handle->_bufsz, handle->_fh));
+}
+
+rpmctl::rpm_read_sink::~rpm_read_sink()
+{}
+
+rpmctl::memory_rpm_read_sink::~memory_rpm_read_sink()
+{}
+
+std::string rpmctl::memory_rpm_read_sink::string() const
+{
+  return(_buffer.str());
+}
+
+void rpmctl::memory_rpm_read_sink::operator()(const char *buffer, ssize_t n)
+{
+  _buffer.write(buffer, n);
+}
+
+void rpmctl::rpm::init()
+{
+  rpmReadConfigFiles(NULL, NULL);
+}
+
+rpmctl::rpm::rpm(const std::string &rpm) throw (rpmctl::rpmctl_except) :
+  _rpm(rpm)
+{
+  Fclose(__read_rpm(rpm, &_rpmhdr));
 }
 
 rpmctl::rpm::~rpm()
@@ -83,7 +155,26 @@ void rpmctl::rpm::conffiles(std::vector<std::string> &out)
   rpmfiFree(fi);
 }
 
-void rpmctl::rpm::read_file(const std::string &, rpm_read_sink &)
+void rpmctl::rpm::read_file(const std::string &f, rpm_read_sink &s)
 {
-  throw(std::runtime_error("TODO:fixme"));
+  archive_handler handle(__read_payload(_rpm));
+
+  struct archive *a = archive_read_new();
+  archive_read_support_compression_all(a);
+  archive_read_support_format_all(a);
+  archive_read_open(a, &handle, NULL, __myread, NULL);
+
+  struct archive_entry *e;
+  while (archive_read_next_header(a, &e) == ARCHIVE_OK) {
+    std::string filename = archive_entry_pathname(e);
+    if (filename.substr(1) == f)
+    {
+      char buffer[RPMCTL_MAXBUFSZ];
+      ssize_t read = archive_read_data(a, buffer, RPMCTL_MAXBUFSZ);
+      s(buffer, read);
+    }
+    else
+      archive_read_data_skip(a);
+  }
+  archive_read_finish(a);
 }

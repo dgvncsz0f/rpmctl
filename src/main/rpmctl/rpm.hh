@@ -31,6 +31,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 #include <rpm/rpmlib.h>
 #include <rpmctl/excepts.hh>
 
@@ -47,7 +48,18 @@ namespace rpmctl
      * \param Bytes read from file;
      * \param Number os bytes read;
      */
+    virtual void operator()(const char *, ssize_t) = 0;
+  };
+
+  class memory_rpm_read_sink : public rpm_read_sink
+  {
+  public:
+    virtual ~memory_rpm_read_sink();
+    std::string string() const;
     virtual void operator()(const char *, ssize_t);
+
+  private:
+    std::ostringstream _buffer;
   };
 
   class rpm
@@ -59,6 +71,7 @@ namespace rpmctl
     void init();
 
     rpm(const std::string &) throw (rpmctl_except);
+
     ~rpm();
 
     /*! Extracts all config files declared in the package provided in

@@ -58,7 +58,6 @@ namespace rpmctl_test
     CHECK(files[0] == "/etc/foobar/cfg1" || files[0] == "/etc/foobar/cfg2" || files[0] == "/etc/foobar/cfg3");
     CHECK(files[1] == "/etc/foobar/cfg1" || files[1] == "/etc/foobar/cfg2" || files[1] == "/etc/foobar/cfg3");
     CHECK(files[2] == "/etc/foobar/cfg1" || files[2] == "/etc/foobar/cfg2" || files[2] == "/etc/foobar/cfg3");
-
   }
 
   TEST(rpm_conffiles_reads_nothing_if_file_has_no_config_files_defined)
@@ -69,5 +68,25 @@ namespace rpmctl_test
     std::vector<std::string> files;
     rpm.conffiles(files);
     CHECK(files.size() == 0);
+  }
+
+  TEST(rpm_read_file_reads_contents_of_files_inside_an_rpm_package_that_matches_the_given_filename)
+  {
+    boost::filesystem::path file = fixtures_path() / "foobar-noconf.rpm";
+    rpmctl::rpm rpm(file.string());
+
+    rpmctl::memory_rpm_read_sink sink;
+    rpm.read_file("/etc/foobar/cfg1", sink);
+    CHECK(sink.string() == "cfg1");
+  }
+
+  TEST(rpm_read_file_does_not_read_any_data_if_filename_does_not_match)
+  {
+    boost::filesystem::path file = fixtures_path() / "foobar-noconf.rpm";
+    rpmctl::rpm rpm(file.string());
+
+    rpmctl::memory_rpm_read_sink sink;
+    rpm.read_file("/foo/bar", sink);
+    CHECK(sink.string() == "");
   }
 }

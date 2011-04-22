@@ -34,11 +34,6 @@
 #include <rpmctl/ui/get_command.hh>
 #include <rpmctl/ui/apply_command.hh>
 
-#include <rpmctl/rpm.hh>
-#include <string>
-#include <vector>
-#include <iostream>
-
 int main(int argc, const char **argv)
 {
   rpmctl::rpm::init();

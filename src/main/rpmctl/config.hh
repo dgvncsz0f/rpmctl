@@ -30,7 +30,7 @@
 #define __RPMCTL_CONFIG_HH__
 
 #ifndef RPMCTL_MAXBUFSZ
-#define RPMCTL_MAXBUFSZ 8192
+#define RPMCTL_MAXBUFSZ 4096
 #endif
 
 #define RPMCTL_VERSION "0.0.1"
