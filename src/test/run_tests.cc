@@ -34,5 +34,6 @@ int main()
   rpmctl::rpm::init();
   int excode = UnitTest::RunAllTests();
   u_cleanup();
+  rpmctl::rpm::destroy();
   return(excode);
 }

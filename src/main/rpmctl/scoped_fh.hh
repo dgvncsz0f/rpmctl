@@ -29,6 +29,7 @@
 #ifndef __RPMCTL_SCOPED_FH_HH__
 #define __RPMCTL_SCOPED_FH_HH__
 
+#include <string>
 #include <unicode/unistr.h>
 #include <unicode/ustdio.h>
 

@@ -101,7 +101,7 @@ __build_main: LDFLAGS +=
 __build_main: $(DIST)/bin/$(MAIN)
 
 __build_test: CPPFLAGS += -Isrc/test -I/usr/include/unittest++
-__build_test: LDFLAGS  += -lboost_filesystem -lboost_system -lunittest++ -lgcov
+__build_test: LDFLAGS  += -lboost_filesystem -lboost_system -lUnitTest++ -lgcov
 __build_test: $(DIST)/bin/$(TEST)
 
 ifeq ($(BIN_TEST),)

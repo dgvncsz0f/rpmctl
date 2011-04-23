@@ -65,10 +65,15 @@ namespace rpmctl
   class rpm
   {
   public:
-    /*! Initializes the rpm system (rpmReadConfigFile).
+    /*! Initializes the rpm engine (rpmReadConfigFile).
      */
     static
     void init();
+
+    /*! Releases all memory required by init method.
+     */
+    static
+    void destroy();
 
     rpm(const std::string &) throw (rpmctl_except);
 

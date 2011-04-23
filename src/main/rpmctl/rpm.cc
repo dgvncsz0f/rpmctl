@@ -26,9 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rpm/rpmtag.h>
+#include <rpm/rpmlib.h>
+#include <rpm/rpmts.h>
 #include <rpm/rpmio.h>
 #include <rpm/rpmts.h>
+#include <rpm/rpmfi.h>
+#ifndef _RPM_4_4_COMPAT
+#include <rpm/rpmtag.h>
+#endif
 #include <archive.h>
 #include <archive_entry.h>
 #include <rpmctl/rpm.hh>
@@ -52,6 +57,22 @@ struct archive_handler
   char *_buffer;
   size_t _bufsz;
 };
+
+static
+const char *__myheader_get_string(Header h, rpmTag tag)
+{
+#ifdef _RPM_4_4_COMPAT
+    hPTR_t data  = NULL;
+    hTYP_t type  = NULL;
+    hCNT_t count = NULL;
+    if (headerGetEntryMinMemory(h, tag, type, &data, count)==1)
+      return(static_cast<const char*>(data));
+    else
+      return(NULL);
+#else
+  return(headerGetString(h, tag));
+#endif
+}
 
 static
 FD_t __read_rpm(const std::string &rpm, Header *rpmhdr)
@@ -89,13 +110,13 @@ FD_t __read_payload(const std::string &rpm)
   std::string ioflags("r.");
   FD_t fd = __read_rpm(rpm, &h);
 
-  const char *compr = headerGetString(h, RPMTAG_PAYLOADCOMPRESSOR);
+  const char *compr = __myheader_get_string(h, RPMTAG_PAYLOADCOMPRESSOR);
   if (compr == NULL)
     ioflags += "gzip";
   else
     ioflags += std::string(compr);
-
   headerFree(h);
+
   FD_t gzdi = Fdopen(fd, ioflags.c_str());
   if (gzdi == NULL)
     throw(rpmctl::rpmctl_except(Fstrerror(gzdi)));
@@ -131,6 +152,11 @@ void rpmctl::rpm::init()
   rpmReadConfigFiles(NULL, NULL);
 }
 
+void rpmctl::rpm::destroy()
+{
+  rpmFreeRpmrc();
+}
+
 rpmctl::rpm::rpm(const std::string &rpm) throw (rpmctl::rpmctl_except) :
   _rpm(rpm)
 {
@@ -144,11 +170,15 @@ rpmctl::rpm::~rpm()
 
 void rpmctl::rpm::conffiles(std::vector<std::string> &out)
 {
+#ifdef _RPM_4_4_COMPAT
+  rpmfi fi = rpmfiNew(NULL, _rpmhdr, RPMTAG_BASENAMES, 0);
+#else
   rpmfi fi = rpmfiNew(NULL, _rpmhdr, RPMTAG_BASENAMES, rpmfiFlags(RPMFI_FLAGS_QUERY));
+#endif
   fi = rpmfiInit(fi, 0);
   while (rpmfiNext(fi)!=-1)
   {
-    rpmfileAttrs attrs = rpmfiFFlags(fi);
+    rpmfileAttrs attrs = rpmfileAttrs(rpmfiFFlags(fi));
     if (attrs & RPMFILE_CONFIG)
       out.push_back(rpmfiFN(fi));
   }

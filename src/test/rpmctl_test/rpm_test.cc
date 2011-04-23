@@ -28,7 +28,6 @@
 
 #include <cstdlib>
 #include <UnitTest++.h>
-#include <boost/filesystem.hpp>
 #include <rpmctl/rpm.hh>
 #include <rpmctl_test/helpers/file_utils.hh>
 

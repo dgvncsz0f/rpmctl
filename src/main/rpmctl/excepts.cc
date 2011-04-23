@@ -36,6 +36,7 @@ rpmctl::rpmctl_except::rpmctl_except(const std::string &what) throw() :
 {}
 
 rpmctl::rpmctl_except::rpmctl_except(const rpmctl::rpmctl_except &copy) throw() :
+  std::exception(copy),
   _what(copy._what)
 {}
 

@@ -35,24 +35,43 @@ There are more commands available, other than *put* and *apply*, but this should
 Dependencies
 ============
 
-  * icu [http://site.icu-project.org/]
-  * popt [http://rpm5.org/]
-  * libarchive [http://code.google.com/p/libarchive/]
-  * Berkeley DB [http://www.oracle.com/technetwork/database/berkeleydb/overview/index.html]
++--------------+------------------------+
+| *dependency* | *min (tested) version* |
++==============+========================+
+| icu          | 3.6                    |
++--------------+------------------------+
+| popt         | 1.10.2.3               |
++--------------+------------------------+
+| libarchive   | 2.8.4                  |
++--------------+------------------------+
+| db_cxx       | 4.3.29                 |
++--------------+------------------------+
+| rpm          | 4.4.2.3                |
++--------------+------------------------+
 
 Testing
 -------
+
   The same as the main program plus:
 
-  * boost_filesystem [http://www.boost.org/doc/libs/]
-  * unittest++ [http://unittest-cpp.sourceforge.net/]
-
++------------------+------------------------+
+| *dependency*     | *min (tested) version* |
++==================+========================+
+| boost filesystem | 1.42                   |
++------------------+------------------------+
+| unittest++       | 1.4.0                  |
++------------------+------------------------+
+        
 Compiling
 =========
 
 ::
 
   $ make build
+
+If using an old version of `librpm (<=4.4)`, perform as follows::
+
+  $ make CPPFLAGS=-D_RPM_4_4_COMPAT build
 
 Binaries will be available under `dist/bin` directory.
 

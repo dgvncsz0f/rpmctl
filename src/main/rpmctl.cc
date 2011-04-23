@@ -46,7 +46,10 @@ int main(int argc, const char **argv)
   router.bind("get", &get_command);
   router.bind("apply", &apply_command);
   int exstatus = router.route(argc, argv);
+
   u_cleanup();
+  rpmctl::rpm::destroy();
+
   return(exstatus);
 }
 

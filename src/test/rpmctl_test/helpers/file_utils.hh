@@ -28,8 +28,9 @@
 #ifndef __RPMCTL_TEST_FILE_UTILS__
 #define __RPMCTL_TEST_FILE_UTILS__
 
+#include <string>
 #include <unicode/unistr.h>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 
 namespace rpmctl_test
 {

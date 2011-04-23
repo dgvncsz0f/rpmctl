@@ -69,6 +69,7 @@ int rpmctl::ui::put_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &
     int rc=0;
     poptContext optctx = poptGetContext(input.argv()[0], input.argc(), input.argv(), options, 0);
     while ((rc=poptGetNextOpt(optctx)) > 0);
+
     if (rc<-1)
     {
       output.print_error(optctx, rc);

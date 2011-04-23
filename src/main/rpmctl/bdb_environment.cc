@@ -94,24 +94,25 @@ rpmctl::bdb_environment::bdb_environment(const std::string &envroot) throw(rpmct
   {
     _env.open(envroot.c_str(), DB_CREATE | DB_INIT_LOG | DB_INIT_TXN | DB_INIT_MPOOL | DB_RECOVER, 0);
     _env.set_error_stream(&std::cerr);
+    _env.set_flags(DB_AUTO_COMMIT, 1);
 
     _secondary = new Db(&_env, 0);
     _secondary->set_flags(DB_DUPSORT);
     _secondary->open( NULL,
-		      "rpmctl_index.db",
-		      NULL,
-		      DB_BTREE,
-		      DB_CREATE | DB_AUTO_COMMIT,
-		      0
+                      "rpmctl_index.db",
+                      NULL,
+                      DB_BTREE,
+                      DB_CREATE,
+                      0
                     );
 
     _master = new Db(&_env, 0);
     _master->open( NULL,
-		   "rpmctl.db",
-		   NULL,
-		   DB_BTREE,
-		   DB_CREATE | DB_AUTO_COMMIT,
-		   0
+                   "rpmctl.db",
+                   NULL,
+                   DB_BTREE,
+                   DB_CREATE,
+                   0
                  );
     _master->associate(NULL, _secondary, __index_package, 0);
   }
@@ -158,7 +159,7 @@ void rpmctl::bdb_environment::put(const UnicodeString &ns, const UnicodeString &
   Dbt dbval(**valbuffer, vallength);
   try
   {
-    _master->put(NULL, &dbkey, &dbval, DB_OVERWRITE_DUP);
+    _master->put(NULL, &dbkey, &dbval, 0);
   }
   catch (const DbException &e)
   {
