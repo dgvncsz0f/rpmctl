@@ -28,7 +28,7 @@ The config file should now look like this::
   hostname: 127.0.0.1
   chroot: /var/jails/0
 
-You may do these steps again (*put* + *apply*) and the new variables will be redefined. Rpmctl accomplishes this by reading the original file from the package before applying the changes.
+You may do these steps again (*put* + *apply*) and the new variables will be redefined.
 
 There are more commands available, other than *put* and *apply*, but this should give you a good overview of what it does.
 
