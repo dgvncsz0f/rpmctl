@@ -191,7 +191,7 @@ namespace rpmctl
     
   private:
     parser_events<T> &_e;
-    const UnicodeString &_ns;
+    const UnicodeString _ns;
   };
 }
 

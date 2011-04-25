@@ -105,9 +105,10 @@ int rpmctl::ui::apply_command::exec(rpmctl::ui::input &input, rpmctl::ui::output
     }
     else
     {
+      std::string mynamespace = (ns==NULL ? (*autorpm).name() : std::string(ns));
       rpmctl::bdb_environment env(home==NULL ? "/var/lib/rpmctl" : home);
       rpmctl::stemplate engine(env);
-      rpmctl::parser<stemplate_handler> parser(engine, ns==NULL ? (*autorpm).name().c_str() : ns);
+      rpmctl::parser<stemplate_handler> parser(engine, mynamespace.c_str());
       
       const std::string &basedir = rpmctl::file_utils::remove_filename(file);
       rpmctl::scoped_tmpfh tmpfile(basedir);
