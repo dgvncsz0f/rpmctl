@@ -38,14 +38,17 @@ std::string rpmctl::memory_sink::string() const
 
 void rpmctl::memory_sink::operator()(const char *buffer, ssize_t n)
 {
-  if (n == 0)
-    _buffer.flush();
-  else
-    _buffer.write(buffer, n);
+  _buffer.write(buffer, n);
+}
+
+void rpmctl::memory_sink::eof()
+{
+  _buffer.flush();
 }
 
 rpmctl::file_sink::file_sink(const std::string &file) :
-  _out(NULL)
+  _out(NULL),
+  _filename(file)
 {
   _out = new std::ofstream(file.c_str());
 }
@@ -61,8 +64,10 @@ rpmctl::file_sink::~file_sink()
 
 void rpmctl::file_sink::operator()(const char *buffer, ssize_t n)
 {
-  if (n == 0)
-    _out->flush();
-  else
-    _out->write(buffer, n);
+  _out->write(buffer, n);
+}
+
+void rpmctl::file_sink::eof()
+{
+  _out->flush();
 }

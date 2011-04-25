@@ -26,6 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <pwd.h>
+#include <grp.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <rpm/rpmlib.h>
 #include <rpm/rpmts.h>
 #include <rpm/rpmio.h>
@@ -38,6 +42,21 @@
 #include <archive_entry.h>
 #include <rpmctl/rpm.hh>
 #include <rpmctl/config.hh>
+
+#ifdef _RPM_4_4_COMPAT
+  #define MYRPMFI_INIT(fi) rpmfi fi = rpmfiNew(NULL, _rpmhdr, RPMTAG_BASENAMES, 0)
+#else
+  #define MYRPMFI_INIT(fi) rpmfi fi = rpmfiNew(NULL, _rpmhdr, RPMTAG_BASENAMES, rpmfiFlags(RPMFI_FLAGS_QUERY))
+#endif
+
+#define MYWITH_RPMFI(fi, code) \
+  MYRPMFI_INIT(fi); \
+  fi = rpmfiInit(fi, 0); \
+  while (rpmfiNext(fi)!=-1) \
+  { \
+    code \
+  }\
+  rpmfiFree(fi);
 
 struct archive_handler
 {
@@ -134,6 +153,11 @@ ssize_t __myread(struct archive *, void *data, const void **buff)
 rpmctl::rpm_read_sink::~rpm_read_sink()
 {}
 
+void rpmctl::rpm_read_sink::eof(rpmctl::rpm &)
+{
+  eof();
+}
+
 void rpmctl::rpm::init()
 {
   rpmReadConfigFiles(NULL, NULL);
@@ -162,19 +186,26 @@ std::string rpmctl::rpm::name()
 
 void rpmctl::rpm::conffiles(std::vector<std::string> &out)
 {
-#ifdef _RPM_4_4_COMPAT
-  rpmfi fi = rpmfiNew(NULL, _rpmhdr, RPMTAG_BASENAMES, 0);
-#else
-  rpmfi fi = rpmfiNew(NULL, _rpmhdr, RPMTAG_BASENAMES, rpmfiFlags(RPMFI_FLAGS_QUERY));
-#endif
-  fi = rpmfiInit(fi, 0);
-  while (rpmfiNext(fi)!=-1)
-  {
-    rpmfileAttrs attrs = rpmfileAttrs(rpmfiFFlags(fi));
-    if (attrs & RPMFILE_CONFIG)
-      out.push_back(rpmfiFN(fi));
-  }
-  rpmfiFree(fi);
+  MYWITH_RPMFI(fi, rpmfileAttrs attrs = rpmfileAttrs(rpmfiFFlags(fi));
+                   if (attrs & RPMFILE_CONFIG)
+                     out.push_back(rpmfiFN(fi));
+              );
+}
+
+void rpmctl::rpm::set_perms(const std::string &f) throw (rpmctl::rpmctl_except)
+{
+  bool success = true;
+  MYWITH_RPMFI(fi, if (rpmfiFN(fi) == f)
+                   {
+                     struct passwd *pwd = getpwnam(rpmfiFUser(fi));
+                     struct group *grp = getgrnam(rpmfiFGroup(fi));
+                     success = pwd!=NULL && grp!=NULL;
+                     if (success)
+                       success = (chown(f.c_str(), pwd->pw_uid, grp->gr_gid)==0) && (chmod(f.c_str(), rpmfiFMode(fi))==0);
+                   }
+              );
+  if (!success)
+    throw(rpmctl::rpmctl_except("error restoring file permissions"));
 }
 
 void rpmctl::rpm::read_file(const std::string &f, rpm_read_sink &s) throw (rpmctl::rpmctl_except)
@@ -197,7 +228,7 @@ void rpmctl::rpm::read_file(const std::string &f, rpm_read_sink &s) throw (rpmct
       ssize_t read;
       while ((read=archive_read_data(a, buffer, RPMCTL_MAXBUFSZ))>0)
         s(buffer, read);
-      s(NULL, 0);
+      s.eof(*this);
       break;
     }
     else

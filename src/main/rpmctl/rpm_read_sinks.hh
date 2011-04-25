@@ -45,7 +45,7 @@ namespace rpmctl
     virtual ~memory_sink();
     std::string string() const;
     virtual void operator()(const char *, ssize_t);
-
+    virtual void eof();
   private:
     std::ostringstream _buffer;
   };
@@ -56,9 +56,11 @@ namespace rpmctl
     file_sink(const std::string &);
     virtual ~file_sink();
     virtual void operator()(const char *, ssize_t);
+    virtual void eof();
 
   private:
     std::ofstream *_out;
+    const std::string _filename;
   };
 }
 

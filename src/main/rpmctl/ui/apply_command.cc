@@ -117,6 +117,7 @@ int rpmctl::ui::apply_command::exec(rpmctl::ui::input &input, rpmctl::ui::output
         (*autorpm).read_file(file, fsink);
         parser.run(tmpfile.tmpfile());
         rpmctl::file_utils::move(tmpfile.tmpfile(), file);
+        (*autorpm).set_perms(file);
       }
       else
       {

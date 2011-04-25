@@ -20,6 +20,6 @@ printf "\$(cfg2)" >$RPM_BUILD_ROOT/etc/foobar/cfg2
 printf "\$(cfg3)" >$RPM_BUILD_ROOT/etc/foobar/cfg3
 
 %files
-%config /etc/foobar/cfg1
-%config /etc/foobar/cfg2
-%config /etc/foobar/cfg3
+%attr(0660,root,users) %config /etc/foobar/cfg1
+%attr(0660,root,users) %config /etc/foobar/cfg2
+%attr(0660,root,users) %config /etc/foobar/cfg3

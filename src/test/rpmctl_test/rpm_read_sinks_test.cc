@@ -40,7 +40,7 @@ namespace rpmctl_test
   {
     rpmctl::memory_sink mem;
     mem("foobar", 6);
-    mem(NULL, 0);
+    mem.eof();
     CHECK(mem.string() == "foobar");
   }
 
@@ -49,7 +49,7 @@ namespace rpmctl_test
     rpmctl::scoped_tmpfh tmpfile;
     rpmctl::file_sink fsink(tmpfile.tmpfile());
     fsink("foobar", 6);
-    fsink(NULL, 0);
+    fsink.eof();
 
     CHECK(rpmctl_test::read_file(tmpfile.tmpfile()) == "foobar");
   }

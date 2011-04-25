@@ -37,18 +37,28 @@
 
 namespace rpmctl
 {
+  class rpm;
 
   class rpm_read_sink
   {
   public:
     virtual ~rpm_read_sink();
 
-    /*! Gets a given amount of data. NULL is sent when EOF is reached.
+    /*! Gets a given amount of data.
      *
      * \param Bytes read from file;
      * \param Number os bytes read;
      */
     virtual void operator()(const char *, ssize_t) = 0;
+
+    /*! Called when RPM has finished reading the file.
+     */
+    virtual void eof() = 0;
+
+    /*! Same as eof() but this one takes the rpm class that was used
+     *  to read the file.
+     */
+    virtual void eof(rpm &);
   };
 
   class rpm
@@ -87,6 +97,10 @@ namespace rpmctl
      *  \param The object that will handle the contents of the file;
      */
     void read_file(const std::string &file, rpm_read_sink &) throw (rpmctl_except);
+
+    /*! Reset the file permissions of a given file.
+     */
+    void set_perms(const std::string &file) throw (rpmctl_except);
 
   private:
     const std::string _rpm;
