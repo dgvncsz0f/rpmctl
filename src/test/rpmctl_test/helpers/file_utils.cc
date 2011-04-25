@@ -32,13 +32,15 @@
 #include <dirent.h>
 #include <cstring>
 #include <boost/filesystem/operations.hpp>
+#include <rpmctl/file_utils.hh>
 #include <rpmctl/scoped_fh.hh>
 #include <rpmctl_test/helpers/file_utils.hh>
 
 boost::filesystem::path rpmctl_test::fixtures_path()
 {
-  boost::filesystem::path me(boost::filesystem::system_complete("."));
-  return(me / "src" / "test" / "fixtures");
+  const std::string &basedir = rpmctl::file_utils::remove_filename(__FILE__);
+  boost::filesystem::path me(boost::filesystem::system_complete(basedir));
+  return(me / ".." / ".." / "fixtures");
 }
 
 UnicodeString rpmctl_test::read_file(const std::string &file)

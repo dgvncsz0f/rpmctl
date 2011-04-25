@@ -15,9 +15,9 @@ A package that contains 3 config files.
 
 %install
 install -d -m 0755 $RPM_BUILD_ROOT/etc/foobar
-printf "cfg1" >$RPM_BUILD_ROOT/etc/foobar/cfg1
-printf "cfg2" >$RPM_BUILD_ROOT/etc/foobar/cfg2
-printf "cfg3" >$RPM_BUILD_ROOT/etc/foobar/cfg3
+printf "\$(cfg1)" >$RPM_BUILD_ROOT/etc/foobar/cfg1
+printf "\$(cfg2)" >$RPM_BUILD_ROOT/etc/foobar/cfg2
+printf "\$(cfg3)" >$RPM_BUILD_ROOT/etc/foobar/cfg3
 
 %files
 %config /etc/foobar/cfg1

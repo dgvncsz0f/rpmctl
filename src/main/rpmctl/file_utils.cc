@@ -26,73 +26,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_RPM_HH__
-#define __RPMCTL_RPM_HH__
-
 #include <cstdlib>
-#include <string>
-#include <vector>
-#include <rpm/rpmlib.h>
-#include <rpmctl/excepts.hh>
+#include <cstdio>
+#include <string.h>
+#include <stdexcept>
+#include <libgen.h>
+#include <rpmctl/file_utils.hh>
 
-namespace rpmctl
+std::string rpmctl::file_utils::remove_filename(const std::string &file)
 {
-
-  class rpm_read_sink
-  {
-  public:
-    virtual ~rpm_read_sink();
-
-    /*! Gets a given amount of data. NULL is sent when EOF is reached.
-     *
-     * \param Bytes read from file;
-     * \param Number os bytes read;
-     */
-    virtual void operator()(const char *, ssize_t) = 0;
-  };
-
-  class rpm
-  {
-  public:
-    /*! Initializes the rpm engine (rpmReadConfigFile).
-     */
-    static
-    void init();
-
-    /*! Releases all memory required by init method.
-     */
-    static
-    void destroy();
-
-    rpm(const std::string &) throw (rpmctl_except);
-
-    ~rpm();
-
-    /*! The name declared in this package
-     */
-    std::string name();
-
-    /*! Extracts all config files declared in the package provided in
-     *  the ctor of this class.
-     *
-     *  \param The container that will take the config file names;
-     */
-    void conffiles(std::vector<std::string> &);
-    
-    /*! Reads the content of a file inside a RPM package invoking
-     *  rpm_read_file_callback repeatedly until the contents of the
-     *  file are consumed.
-     *
-     *  \param The file you want to read from the RPM package;
-     *  \param The object that will handle the contents of the file;
-     */
-    void read_file(const std::string &file, rpm_read_sink &) throw (rpmctl_except);
-
-  private:
-    const std::string _rpm;
-    Header _rpmhdr;
-  };
-
+  char *filedup = strdup(file.c_str());
+  char *basedir = dirname(filedup);
+  std::string retval(basedir);
+  std::free(filedup);
+  return(retval);
 }
 
-#endif
+void rpmctl::file_utils::move(const std::string &a, const std::string &b)
+{
+  if (std::rename(a.c_str(), b.c_str()) != 0)
+    throw(std::runtime_error("could not move file "+ a +"to its destination: " + b));
+}

@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <UnitTest++.h>
 #include <rpmctl/rpm.hh>
+#include <rpmctl/rpm_read_sinks.hh>
 #include <rpmctl_test/helpers/file_utils.hh>
 
 namespace rpmctl_test
@@ -69,23 +70,40 @@ namespace rpmctl_test
     CHECK(files.size() == 0);
   }
 
+  TEST(rpm_name_returns_the_name_declared_in_the_spec)
+  {
+    boost::filesystem::path file = fixtures_path() / "foobar-noconf.rpm";
+    rpmctl::rpm rpm(file.string());
+    CHECK(rpm.name() == "foobar-noconf");
+
+    file = fixtures_path() / "foobar.rpm";
+    rpmctl::rpm rpm2(file.string());
+    CHECK(rpm2.name() == "foobar");
+  }
+
   TEST(rpm_read_file_reads_contents_of_files_inside_an_rpm_package_that_matches_the_given_filename)
   {
     boost::filesystem::path file = fixtures_path() / "foobar-noconf.rpm";
     rpmctl::rpm rpm(file.string());
 
-    rpmctl::memory_rpm_read_sink sink;
+    rpmctl::memory_sink sink;
     rpm.read_file("/etc/foobar/cfg1", sink);
-    CHECK(sink.string() == "cfg1");
+    CHECK(sink.string() == "$(cfg1)");
   }
 
-  TEST(rpm_read_file_does_not_read_any_data_if_filename_does_not_match)
+  TEST(rpm_read_file_raises_exception_if_filename_does_not_match)
   {
     boost::filesystem::path file = fixtures_path() / "foobar-noconf.rpm";
     rpmctl::rpm rpm(file.string());
 
-    rpmctl::memory_rpm_read_sink sink;
-    rpm.read_file("/foo/bar", sink);
-    CHECK(sink.string() == "");
+    rpmctl::memory_sink sink;
+    try
+    {
+      rpm.read_file("/foo/bar", sink);
+      CHECK(false);
+    }
+    catch (const rpmctl::rpmctl_except &)
+    {}
   }
+
 }

@@ -26,73 +26,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_RPM_HH__
-#define __RPMCTL_RPM_HH__
+#include <rpmctl/rpm_read_sinks.hh>
 
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <rpm/rpmlib.h>
-#include <rpmctl/excepts.hh>
+rpmctl::memory_sink::~memory_sink()
+{}
 
-namespace rpmctl
+std::string rpmctl::memory_sink::string() const
 {
-
-  class rpm_read_sink
-  {
-  public:
-    virtual ~rpm_read_sink();
-
-    /*! Gets a given amount of data. NULL is sent when EOF is reached.
-     *
-     * \param Bytes read from file;
-     * \param Number os bytes read;
-     */
-    virtual void operator()(const char *, ssize_t) = 0;
-  };
-
-  class rpm
-  {
-  public:
-    /*! Initializes the rpm engine (rpmReadConfigFile).
-     */
-    static
-    void init();
-
-    /*! Releases all memory required by init method.
-     */
-    static
-    void destroy();
-
-    rpm(const std::string &) throw (rpmctl_except);
-
-    ~rpm();
-
-    /*! The name declared in this package
-     */
-    std::string name();
-
-    /*! Extracts all config files declared in the package provided in
-     *  the ctor of this class.
-     *
-     *  \param The container that will take the config file names;
-     */
-    void conffiles(std::vector<std::string> &);
-    
-    /*! Reads the content of a file inside a RPM package invoking
-     *  rpm_read_file_callback repeatedly until the contents of the
-     *  file are consumed.
-     *
-     *  \param The file you want to read from the RPM package;
-     *  \param The object that will handle the contents of the file;
-     */
-    void read_file(const std::string &file, rpm_read_sink &) throw (rpmctl_except);
-
-  private:
-    const std::string _rpm;
-    Header _rpmhdr;
-  };
-
+  return(_buffer.str());
 }
 
-#endif
+void rpmctl::memory_sink::operator()(const char *buffer, ssize_t n)
+{
+  if (n == 0)
+    _buffer.flush();
+  else
+    _buffer.write(buffer, n);
+}
+
+rpmctl::file_sink::file_sink(const std::string &file) :
+  _out(NULL)
+{
+  _out = new std::ofstream(file.c_str());
+}
+
+rpmctl::file_sink::~file_sink()
+{
+  if (_out != NULL)
+  {
+    _out->close();
+    delete(_out);
+  }
+}
+
+void rpmctl::file_sink::operator()(const char *buffer, ssize_t n)
+{
+  if (n == 0)
+    _out->flush();
+  else
+    _out->write(buffer, n);
+}

@@ -134,19 +134,6 @@ ssize_t __myread(struct archive *, void *data, const void **buff)
 rpmctl::rpm_read_sink::~rpm_read_sink()
 {}
 
-rpmctl::memory_rpm_read_sink::~memory_rpm_read_sink()
-{}
-
-std::string rpmctl::memory_rpm_read_sink::string() const
-{
-  return(_buffer.str());
-}
-
-void rpmctl::memory_rpm_read_sink::operator()(const char *buffer, ssize_t n)
-{
-  _buffer.write(buffer, n);
-}
-
 void rpmctl::rpm::init()
 {
   rpmReadConfigFiles(NULL, NULL);
@@ -168,6 +155,11 @@ rpmctl::rpm::~rpm()
   headerFree(_rpmhdr);
 }
 
+std::string rpmctl::rpm::name()
+{
+  return(__myheader_get_string(_rpmhdr, RPMTAG_NAME));
+}
+
 void rpmctl::rpm::conffiles(std::vector<std::string> &out)
 {
 #ifdef _RPM_4_4_COMPAT
@@ -185,8 +177,9 @@ void rpmctl::rpm::conffiles(std::vector<std::string> &out)
   rpmfiFree(fi);
 }
 
-void rpmctl::rpm::read_file(const std::string &f, rpm_read_sink &s)
+void rpmctl::rpm::read_file(const std::string &f, rpm_read_sink &s) throw (rpmctl::rpmctl_except)
 {
+  bool file_found = false;
   archive_handler handle(__read_payload(_rpm));
 
   struct archive *a = archive_read_new();
@@ -199,12 +192,19 @@ void rpmctl::rpm::read_file(const std::string &f, rpm_read_sink &s)
     std::string filename = archive_entry_pathname(e);
     if (filename.substr(1) == f)
     {
+      file_found = true;
       char buffer[RPMCTL_MAXBUFSZ];
-      ssize_t read = archive_read_data(a, buffer, RPMCTL_MAXBUFSZ);
-      s(buffer, read);
+      ssize_t read;
+      while ((read=archive_read_data(a, buffer, RPMCTL_MAXBUFSZ))>0)
+        s(buffer, read);
+      s(NULL, 0);
+      break;
     }
     else
       archive_read_data_skip(a);
   }
   archive_read_finish(a);
+
+  if (!file_found)
+    throw(rpmctl::rpmctl_except("file not found in RPM package: "+ f));
 }

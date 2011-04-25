@@ -26,73 +26,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RPMCTL_RPM_HH__
-#define __RPMCTL_RPM_HH__
+#ifndef __RPMCTL_FILE_UTILS_HH__
+#define __RPMCTL_FILE_UTILS_HH__
 
-#include <cstdlib>
 #include <string>
-#include <vector>
-#include <rpm/rpmlib.h>
-#include <rpmctl/excepts.hh>
 
 namespace rpmctl
 {
-
-  class rpm_read_sink
+  namespace file_utils
   {
-  public:
-    virtual ~rpm_read_sink();
 
-    /*! Gets a given amount of data. NULL is sent when EOF is reached.
-     *
-     * \param Bytes read from file;
-     * \param Number os bytes read;
-     */
-    virtual void operator()(const char *, ssize_t) = 0;
-  };
+    std::string remove_filename(const std::string &);
 
-  class rpm
-  {
-  public:
-    /*! Initializes the rpm engine (rpmReadConfigFile).
-     */
-    static
-    void init();
+    void move(const std::string &, const std::string &);
 
-    /*! Releases all memory required by init method.
-     */
-    static
-    void destroy();
-
-    rpm(const std::string &) throw (rpmctl_except);
-
-    ~rpm();
-
-    /*! The name declared in this package
-     */
-    std::string name();
-
-    /*! Extracts all config files declared in the package provided in
-     *  the ctor of this class.
-     *
-     *  \param The container that will take the config file names;
-     */
-    void conffiles(std::vector<std::string> &);
-    
-    /*! Reads the content of a file inside a RPM package invoking
-     *  rpm_read_file_callback repeatedly until the contents of the
-     *  file are consumed.
-     *
-     *  \param The file you want to read from the RPM package;
-     *  \param The object that will handle the contents of the file;
-     */
-    void read_file(const std::string &file, rpm_read_sink &) throw (rpmctl_except);
-
-  private:
-    const std::string _rpm;
-    Header _rpmhdr;
-  };
-
+  }
 }
 
 #endif

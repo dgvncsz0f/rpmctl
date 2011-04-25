@@ -19,8 +19,10 @@ The file above defined two variables, which are enclosed between `$(` and `)` ch
 This will define these two variables, which will be persisted into a local database. Invoking the command *apply* should expand this variables, replacing them by the values you have just defined::
 
   $ rpmctl apply -n foobar -f /etc/foobar/file.conf
-  # alternatively, which makes rpmctl to check on the package for %config entries
-  $ rpmctl apply -n foobar
+  # alternatively:
+  $ rpmctl apply -p foobar -f /etc/foobar/file.conf
+
+The difference between the `-n` and `-p` switches is that the later reads the file directly from the RPM package, using the name declared in the RPM as the default namespace.
 
 The config file should now look like this::
 

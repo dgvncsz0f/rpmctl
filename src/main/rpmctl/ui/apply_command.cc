@@ -33,8 +33,11 @@
 #include <stdexcept>
 #include <unicode/ustream.h>
 #include <rpmctl/config.hh>
+#include <rpmctl/rpm.hh>
+#include <rpmctl/rpm_read_sinks.hh>
 #include <rpmctl/bdb_environment.hh>
 #include <rpmctl/stemplate.hh>
+#include <rpmctl/file_utils.hh>
 #include <rpmctl/parser.hh>
 #include <rpmctl/autoptr_malloc_adapter.hh>
 #include <rpmctl/ui/router.hh>
@@ -53,16 +56,20 @@ std::string rpmctl::ui::apply_command::description() const
 
 int rpmctl::ui::apply_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &output)
 {
-  char *home=strdup(RPMCTL_DEFAULT_DBHOME), *package=NULL, *file=NULL;
+  char *home=strdup(RPMCTL_DEFAULT_DBHOME), *ns=NULL, *file=NULL, *package=NULL;
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autohome(new rpmctl::autoptr_malloc_adapter(home));
-  std::auto_ptr<rpmctl::autoptr_malloc_adapter> autopkg(new rpmctl::autoptr_malloc_adapter(package));
+  std::auto_ptr<rpmctl::autoptr_malloc_adapter> autons(new rpmctl::autoptr_malloc_adapter(ns));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autofile(new rpmctl::autoptr_malloc_adapter(file));
+  std::auto_ptr<rpmctl::autoptr_malloc_adapter> autopkg(new rpmctl::autoptr_malloc_adapter(package));
+  std::auto_ptr<rpmctl::rpm> autorpm(NULL);
+
   struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &home,    0, "Specify a home directory for the database environment", NULL },
-                                  { "namespace", 'n',  POPT_ARG_STRING,                           &package, 0, "the name of a rpm package", NULL },
-                                  { "file",      'f',  POPT_ARG_STRING,                           &file,    0, "The name of a file", NULL },
+                                  { "namespace", 'n',  POPT_ARG_STRING,                           &ns,      0, "the default namespace for unqualified variables", NULL },
+                                  { "package",   'p',  POPT_ARG_STRING,                           &package, 0, "the filename of the RPM package to read original files from", NULL },
+                                  { "file",      'f',  POPT_ARG_STRING,                           &file,    0, "The name of a file to perform variable expansion", NULL },
                                   POPT_TABLEEND
                                 };
-  
+
   int exstatus = EXIT_SUCCESS;
   if (input.want_help())
     output.print_help(options);
@@ -71,29 +78,51 @@ int rpmctl::ui::apply_command::exec(rpmctl::ui::input &input, rpmctl::ui::output
     int rc=0;
     poptContext optctx = poptGetContext(input.argv()[0], input.argc(), input.argv(), options, 0);
     while ((rc=poptGetNextOpt(optctx)) > 0);
+
+    if (package != NULL)
+      autorpm.reset(new rpmctl::rpm(package));
+
     if (rc<-1)
     {
       output.print_error(optctx, rc);
     }
-    else if (!output.validates_notnull(package, "package must not be null"))
+    else if (!output.validates_notnull(file, "file must not be null"))
     {
       exstatus = EXIT_FAILURE;
+    }
+    else if (ns==NULL && package==NULL)
+    {
+      output.print_error("either --package or --namespace must be provided");
+      exstatus = EXIT_FAILURE;
+    }
+    else if (ns!=NULL && package!=NULL)
+    {
+      if ((*autorpm).name() != std::string(ns))
+      {
+        output.print_error("--namespace must match the name declared in the provided RPM package");
+        exstatus = EXIT_FAILURE;
+      }
     }
     else
     {
       rpmctl::bdb_environment env(home==NULL ? "/var/lib/rpmctl" : home);
-      if (file != NULL)
+      rpmctl::stemplate engine(env);
+      rpmctl::parser<stemplate_handler> parser(engine, ns==NULL ? (*autorpm).name().c_str() : ns);
+      
+      const std::string &basedir = rpmctl::file_utils::remove_filename(file);
+      rpmctl::scoped_tmpfh tmpfile(basedir);
+      if (package!=NULL)
       {
-        rpmctl::stemplate engine(env);
-        rpmctl::parser<stemplate_handler> parser(engine, package);
-        parser.run(file);
+        rpmctl::file_sink fsink(tmpfile.tmpfile());
+        (*autorpm).read_file(file, fsink);
+        parser.run(tmpfile.tmpfile());
+        rpmctl::file_utils::move(tmpfile.tmpfile(), file);
       }
       else
       {
-        throw(std::runtime_error("unsupported operation exception"));
+        parser.run(file);
       }
     }
-  }
-
+  }   
   return(exstatus);
 }

@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <libgen.h>
 #include <stdexcept>
 #include <cstdio>
 #include <cstdlib>
@@ -34,6 +33,7 @@
 #include <unicode/ustdio.h>
 #include <rpmctl/stemplate.hh>
 #include <rpmctl/scoped_tmpfh.hh>
+#include <rpmctl/file_utils.hh>
 
 static
 void __exfwrite(UFILE *fh, const UnicodeString &txt)
@@ -51,18 +51,7 @@ rpmctl::stemplate_handler::stemplate_handler(const std::string cfgfile) :
   _cfgfile(cfgfile),
   _tmpfh(NULL)
 {
-  char *filedup = strdup(cfgfile.c_str());
-  char *basedir = dirname(filedup);
-  try
-  {
-    _tmpfh = new rpmctl::scoped_tmpfh(basedir);
-    free(filedup);
-  }
-  catch (const std::exception &)
-  {
-    free(filedup);
-    throw;
-  }
+  _tmpfh = new rpmctl::scoped_tmpfh(rpmctl::file_utils::remove_filename(cfgfile));
 }
 
 rpmctl::stemplate_handler::~stemplate_handler()
@@ -104,8 +93,7 @@ void rpmctl::stemplate::on_eof(stemplate_handler *data)
 {
   const std::string &tmpfile = data->_tmpfh->tmpfile();
   const std::string &cfgfile = data->_cfgfile;
-  if (std::rename(tmpfile.c_str(), cfgfile.c_str()) != 0)
-    throw(std::runtime_error("could not move file "+ tmpfile +"to its destination: " + cfgfile));
+  rpmctl::file_utils::move(tmpfile, cfgfile);
   delete(data);
 }
 
