@@ -93,9 +93,10 @@ And code coverage (using gcov + lcov) data, in HTML format, will available at di
 TODO
 ====
 
+  * write the man page;
   * write a YUM plugin, for 2 reasons:
-    1) make it easier to use as YUM is usually available in rhel machines;
-    2) to work around the fact that the RPM database contains only headers. By
+    1. make it easier to use as YUM is usually available in rhel machines;
+    2. to work around the fact that the RPM database contains only headers. By
        writing such a plugin, rpmctl might get access to the payload, without
        the need to cache the file locally;
   * change parser interface to use a data source instead of receiving a file
