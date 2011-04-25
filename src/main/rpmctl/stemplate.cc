@@ -91,6 +91,7 @@ void rpmctl::stemplate::on_variable(const UnicodeString &ns, const UnicodeString
 
 void rpmctl::stemplate::on_eof(stemplate_handler *data)
 {
+  u_fflush(**(data->_tmpfh));
   const std::string &tmpfile = data->_tmpfh->tmpfile();
   const std::string &cfgfile = data->_cfgfile;
   rpmctl::file_utils::move(tmpfile, cfgfile);
