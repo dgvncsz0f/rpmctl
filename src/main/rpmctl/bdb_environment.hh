@@ -44,6 +44,7 @@ namespace rpmctl
     bdb_environment(const std::string &) throw(rpmctl_except);
     virtual ~bdb_environment();
 
+    virtual bool has(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
     virtual UnicodeString get(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
     virtual void put(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
 

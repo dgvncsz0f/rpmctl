@@ -29,6 +29,7 @@
 #ifndef __RPMCTL_UI_PUT_COMMAND_HH__
 #define __RPMCTL_UI_PUT_COMMAND_HH__
 
+#include <string>
 #include <rpmctl/ui/command.hh>
 
 namespace rpmctl

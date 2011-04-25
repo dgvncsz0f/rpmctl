@@ -26,24 +26,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rpmctl/environment.hh>
+#ifndef __RPMCTL_UI_DEF_COMMAND_HH__
+#define __RPMCTL_UI_DEF_COMMAND_HH__
 
-rpmctl::environment::~environment()
-{}
+#include <string>
+#include <rpmctl/ui/command.hh>
 
-rpmctl::nil_env::~nil_env()
-{}
-
-bool rpmctl::nil_env::has(const UnicodeString &, const UnicodeString &) throw(rpmctl::rpmctl_except)
+namespace rpmctl
 {
-  return(false);
+
+  namespace ui
+  {
+    class def_command : public command
+    {
+    public:
+      def_command();
+      virtual ~def_command();
+
+      virtual std::string description() const;
+      
+      virtual int exec(input &, output &);
+    };
+
+  }
+
 }
 
-UnicodeString rpmctl::nil_env::get(const UnicodeString &, const UnicodeString &, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
-{
-  return(defval);
-}
-
-void rpmctl::nil_env::put(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl::rpmctl_except)
-{
-}
+#endif

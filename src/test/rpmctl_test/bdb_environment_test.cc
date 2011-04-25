@@ -67,6 +67,21 @@ namespace rpmctl_test
     CHECK(UnicodeString("foobar") == env.get("namespace", "foobar", "default"));
   }
 
+  TEST(bdb_environment_has_should_return_false_for_undefined_keys)
+  {
+    std::string dbhome = bdb_environment_setup();
+    rpmctl::bdb_environment env(dbhome);
+    CHECK(! env.has("namespace", "foobar"));
+  }
+  
+  TEST(bdb_environment_has_should_return_true_after_a_put)
+  {
+    std::string dbhome = bdb_environment_setup();
+    rpmctl::bdb_environment env(dbhome);
+    env.put("namespace", "foobar", "foobar");
+    CHECK(env.has("namespace", "foobar"));
+  }
+
   TEST(bdb_environment_ctor_should_raise_exception_if_cant_create_database)
   {
     try

@@ -170,6 +170,41 @@ void rpmctl::bdb_environment::put(const UnicodeString &ns, const UnicodeString &
   }
 }
 
+bool rpmctl::bdb_environment::has(const UnicodeString &ns, const UnicodeString &key) throw(rpmctl::rpmctl_except)
+{
+  std::auto_ptr<rpmctl::autoptr_array_adapter<char> > keybuffer(NULL);
+
+  int32_t keylength = __serialize(NULL, ns, key);
+  keybuffer.reset(new rpmctl::autoptr_array_adapter<char>(new char[keylength]));
+  __serialize(**keybuffer, ns, key);
+
+  Dbt dbkey(**keybuffer, keylength);
+  Dbt dbval;
+  dbval.set_data(NULL);
+  dbval.set_ulen(0);
+  dbval.set_flags(DB_DBT_USERMEM);
+
+  try
+  {
+    try
+    {
+      _master->get(NULL, &dbkey, &dbval, 0);
+      return(false);
+    }
+    catch (const DbMemoryException &)
+    {
+      return(true);
+    }
+  }
+  catch (const DbException &e)
+  {
+    std::string what;
+    what += "dbexception: ";
+    what += e.what();
+    throw(rpmctl::rpmctl_except(what));
+  }
+}
+
 UnicodeString rpmctl::bdb_environment::get(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
 {
   std::auto_ptr<rpmctl::autoptr_array_adapter<char> > keybuffer(NULL);

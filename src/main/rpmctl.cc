@@ -31,6 +31,7 @@
 #include <rpmctl/ui/command.hh>
 #include <rpmctl/ui/router.hh>
 #include <rpmctl/ui/put_command.hh>
+#include <rpmctl/ui/def_command.hh>
 #include <rpmctl/ui/get_command.hh>
 #include <rpmctl/ui/apply_command.hh>
 
@@ -39,10 +40,12 @@ int main(int argc, const char **argv)
   rpmctl::rpm::init();
 
   rpmctl::ui::put_command put_command;
+  rpmctl::ui::def_command def_command;
   rpmctl::ui::get_command get_command;
   rpmctl::ui::apply_command apply_command;
   rpmctl::ui::router router;
   router.bind("put", &put_command);
+  router.bind("def", &def_command);
   router.bind("get", &get_command);
   router.bind("apply", &apply_command);
   int exstatus = router.route(argc, argv);

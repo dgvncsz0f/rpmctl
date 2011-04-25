@@ -40,6 +40,8 @@ namespace rpmctl
   public:
     virtual ~environment();
 
+    virtual bool has(const UnicodeString &, const UnicodeString &key) throw(rpmctl_except) = 0;
+
     virtual UnicodeString get(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &defval) throw(rpmctl_except) = 0;
 
     virtual void put(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &val) throw(rpmctl_except) = 0;
@@ -49,6 +51,8 @@ namespace rpmctl
   {
   public:
     virtual ~nil_env();
+
+    virtual bool has(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
 
     virtual UnicodeString get(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
 
