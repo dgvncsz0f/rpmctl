@@ -1,0 +1,15 @@
+#!/bin/sh
+
+awk_bin=/usr/bin/awk
+
+read_version()
+{
+  local file=${1}
+  read_version_return=$($awk_bin '{ match($0, /^#define RPMCTL_VERSION_STR[[:space:]]*"(.*)"$/, m); if (m[1]) printf "%s\n", m[1]}' $file)
+}
+
+read_version $1
+if [ -n "$read_version_return" ]
+then
+  printf "%s" $read_version_return
+fi

@@ -184,7 +184,7 @@ void rpmctl::ui::output::print_version()
 {
   std::cout << _progname
             << " version "
-            << RPMCTL_VERSION
+            << RPMCTL_VERSION_STR
             << std::endl
             << std::endl
             << "Copyright (C) 2011 Diego Souza."
