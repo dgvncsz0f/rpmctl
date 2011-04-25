@@ -98,7 +98,7 @@ FD_t __read_rpm(const std::string &rpm, Header *rpmhdr)
 {
   FD_t fd = Fopen(rpm.c_str(), "r.ufdio");
   if (Ferror(fd))
-    throw(rpmctl::rpmctl_except(Fstrerror(fd)));
+    throw(rpmctl::rpmctl_except(rpm +": " + Fstrerror(fd)));
 
   rpmts ts = rpmtsCreate();
   rpmVSFlags flags = rpmVSFlags(_RPMVSF_NODIGESTS | _RPMVSF_NOSIGNATURES | RPMVSF_NOHDRCHK);
@@ -138,7 +138,7 @@ FD_t __read_payload(const std::string &rpm)
 
   FD_t gzdi = Fdopen(fd, ioflags.c_str());
   if (gzdi == NULL)
-    throw(rpmctl::rpmctl_except(Fstrerror(gzdi)));
+    throw(rpmctl::rpmctl_except(std::string("error reading RPM payload: ") + Fstrerror(gzdi)));
   return(gzdi);
 }
 
