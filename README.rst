@@ -93,8 +93,14 @@ And code coverage (using gcov + lcov) data, in HTML format, will available at di
 TODO
 ====
 
-  * change parser interface to use a data sources instead of receiving a file directly: this is required so we can parse the RPM config while extracting it from the package;
-  * finish the *RPM* integration;
+  * write a YUM plugin, for 2 reasons:
+    1) make it easier to use as YUM is usually available in rhel machines;
+    2) to work around the fact that the RPM database contains only headers. By
+       writing such a plugin, rpmctl might get access to the payload, without
+       the need to cache the file locally;
+  * change parser interface to use a data source instead of receiving a file
+    directly: this is required so we can parse the RPM config while extracting
+    it from the package;
   * multiple keys in put/get commands;
   * support for rpm relocation feature;
   * fix the compatibility problems with big/little endian architectures;
