@@ -13,17 +13,23 @@ Group:               System Environment/Ext
 Packager:            dsouza at bitforest.org
 Source:              %{source}
 
+Requires:            libarchive >= 2.8.4
+Requires:            libicu     >= 3.6
+Requires:            db4        >= 4.3.29
+Requires:            rpm-libs   >= 4.4.2.3
+Requires:            popt       >= 1.10.2.3
+
 %description 
 This software aims to provide a minimal templating system for RPM
 [config] files. The ideia to to able to change configuration options
 without editing the file directly, which might be error-prone.
 
 %prep
-%(cd ..; git archive --prefix=%{name}-%{version}/ master >"%{source}")
+%(cd ../; git archive --prefix=%{name}-%{version}/ master >"%{source}")
 %setup -q
 
 %build
-make CPPFLAGS="$CPPFLAGS -g" CXXFLAGS=-O2 build
+make CPPFLAGS=-D_RPM_4_4_COMPAT\ -g CXXFLAGS=-O2 build
 
 %install
 install -d -m 0755 %{buildroot}/usr/local/bin
