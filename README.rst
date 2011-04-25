@@ -20,7 +20,7 @@ This will define these two variables, which will be persisted into a local datab
 
   $ rpmctl apply -n foobar -f /etc/foobar/file.conf
   # alternatively:
-  $ rpmctl apply -p foobar -f /etc/foobar/file.conf
+  $ rpmctl apply -p /path/to/foobar.rpm -f /etc/foobar/file.conf
 
 The difference between the `-n` and `-p` switches is that the later reads the file directly from the RPM package, using the name declared in the RPM as the default namespace.
 
