@@ -28,6 +28,9 @@
 
 #include <rpmctl/environment.hh>
 
+rpmctl::environment_list_callback::~environment_list_callback()
+{}
+
 rpmctl::environment::~environment()
 {}
 
@@ -35,15 +38,13 @@ rpmctl::nil_env::~nil_env()
 {}
 
 bool rpmctl::nil_env::has(const UnicodeString &, const UnicodeString &) throw(rpmctl::rpmctl_except)
-{
-  return(false);
-}
+{ return(false); }
 
 UnicodeString rpmctl::nil_env::get(const UnicodeString &, const UnicodeString &, const UnicodeString &defval) throw(rpmctl::rpmctl_except)
-{
-  return(defval);
-}
+{ return(defval); }
 
 void rpmctl::nil_env::put(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl::rpmctl_except)
-{
-}
+{}
+
+void rpmctl::nil_env::list(const UnicodeString &, rpmctl::environment_list_callback &) throw(rpmctl::rpmctl_except)
+{}

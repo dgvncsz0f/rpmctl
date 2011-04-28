@@ -246,3 +246,6 @@ UnicodeString rpmctl::bdb_environment::get(const UnicodeString &ns, const Unicod
     throw(rpmctl::rpmctl_except(what));
   }
 }
+
+void rpmctl::bdb_environment::list(const UnicodeString &, rpmctl::environment_list_callback &) throw(rpmctl::rpmctl_except)
+{ throw(rpmctl::rpmctl_except("TODO:fixme")); }

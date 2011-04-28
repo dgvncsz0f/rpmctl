@@ -47,7 +47,7 @@ namespace rpmctl
     virtual bool has(const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
     virtual UnicodeString get(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
     virtual void put(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
-
+    virtual void list(const UnicodeString &, environment_list_callback &) throw(rpmctl_except);
   private:
     DbEnv _env;
     Db *_master;

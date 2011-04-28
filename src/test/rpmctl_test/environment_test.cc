@@ -34,6 +34,23 @@
 namespace rpmctl_test
 {
 
+  struct count_callback : public rpmctl::environment_list_callback
+  {
+    count_callback() :
+      _total(0)
+    {}
+
+    ~count_callback()
+    {}
+
+    void operator()(const UnicodeString &, const UnicodeString &, const UnicodeString &)
+    {
+      _total += 1;
+    }
+
+    int _total;
+  };
+
   TEST(nil_env_get_should_return_the_default)
   {
     rpmctl::nil_env env;
@@ -47,4 +64,11 @@ namespace rpmctl_test
     CHECK(UnicodeString("default") == env.get("namespace", "foobar", "default"));
   }
 
+  TEST(nil_env_list_should_do_nothing)
+  {
+    rpmctl::nil_env env;
+    count_callback cc;
+    env.list("foobar", cc);
+    CHECK(cc._total == 0);
+  }
 }
