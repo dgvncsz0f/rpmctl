@@ -46,7 +46,7 @@ rpmctl::ui::get_command::~get_command()
 
 std::string rpmctl::ui::get_command::description() const
 {
-  return("show values of variables");
+  return("list variables/namespaces");
 }
 
 int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &output)
@@ -56,8 +56,8 @@ int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autons(new rpmctl::autoptr_malloc_adapter(ns));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autokey(new rpmctl::autoptr_malloc_adapter(key));
   struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &home, 0, "Specify a home directory for the database environment", NULL },
-                                  { "namespace", 'n',  POPT_ARG_STRING, &ns,   0, "the package name. Without this list all namespaces", NULL },
-                                  { "key",       'k',  POPT_ARG_STRING, &key,  0, "The name of the variable. this list all keys", NULL },
+                                  { "namespace", 'n',  POPT_ARG_STRING,                           &ns,   0, "the package name. Without this list all namespaces", NULL },
+                                  { "key",       'k',  POPT_ARG_STRING,                           &key,  0, "The name of the variable. this list all keys", NULL },
                                   POPT_TABLEEND
                                 };
   
