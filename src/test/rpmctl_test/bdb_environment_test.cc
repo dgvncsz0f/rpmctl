@@ -30,6 +30,7 @@
 #include <UnitTest++.h>
 #include <rpmctl/bdb_environment.hh>
 #include <rpmctl_test/helpers/file_utils.hh>
+#include <rpmctl_test/helpers/memory_envlist_callback.hh>
 
 namespace rpmctl_test
 {
@@ -54,6 +55,34 @@ namespace rpmctl_test
     rpmctl::bdb_environment env(dbhome);
     env.put("namespace", "foobar", "foobar");
     CHECK(UnicodeString("foobar") == env.get("namespace", "foobar", "default"));
+  }
+
+  TEST(bdb_environment_list_should_return_all_variables_available_database)
+  {
+    std::string dbhome = bdb_environment_setup();
+    {
+      rpmctl::bdb_environment env(dbhome);
+      env.put("namespace", "foobar1", "foo");
+      env.put("namespace", "foobar2", "bar");
+      env.put("namespace", "foobar3", "foobar");
+    }
+
+    rpmctl::bdb_environment env(dbhome);
+    rpmctl_test::memory_envlist_callback cc;
+    env.list("namespace", cc);
+
+    CHECK(cc.variables().size() == 3);
+  }
+
+  TEST(bdb_environment_list_should_return_nothing_if_there_are_no_variables)
+  {
+    std::string dbhome = bdb_environment_setup();
+    rpmctl::bdb_environment env(dbhome);
+
+    rpmctl_test::memory_envlist_callback cc;
+    env.list("namespace", cc);
+
+    CHECK(cc.variables().size() == 0);
   }
 
   TEST(bdb_environment_put_should_perform_durable_updates)

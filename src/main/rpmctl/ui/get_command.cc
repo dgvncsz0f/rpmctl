@@ -34,6 +34,7 @@
 #include <rpmctl/config.hh>
 #include <rpmctl/bdb_environment.hh>
 #include <rpmctl/autoptr_malloc_adapter.hh>
+#include <rpmctl/stdout_envlist_callback.hh>
 #include <rpmctl/ui/router.hh>
 #include <rpmctl/ui/get_command.hh>
 
@@ -56,7 +57,7 @@ int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autokey(new rpmctl::autoptr_malloc_adapter(key));
   struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &home, 0, "Specify a home directory for the database environment", NULL },
                                   { "namespace", 'n',  POPT_ARG_STRING, &ns,   0, "the package name", NULL },
-                                  { "key",       'k',  POPT_ARG_STRING, &key,  0, "The name of the variable", NULL },
+                                  { "key",       'k',  POPT_ARG_STRING, &key,  0, "The name of the variable. Without this list all keys", NULL },
                                   POPT_TABLEEND
                                 };
   
@@ -73,16 +74,23 @@ int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &
     {
       output.print_error(optctx, rc);
     }
-    else if (!output.validates_notnull(ns,  "namespace must not be null") ||
-             !output.validates_notnull(key, "key must not be null"))
+    else if (!output.validates_notnull(ns,  "namespace must not be null"))
     {
       exstatus = EXIT_FAILURE;
     }
     else
     {
       rpmctl::bdb_environment env(home==NULL ? RPMCTL_DEFAULT_DBHOME : home);
-      std::cout << env.get(ns, key, "<<<variable not defined>>>")
-                << std::endl;
+      if (key != NULL)
+      {
+        std::cout << env.get(ns, key, "<<<variable not defined>>>")
+                  << std::endl;
+      }
+      else
+      {
+        stdout_envlist_callback cc;
+        env.list(ns, cc);
+      }
     }
   }
 

@@ -85,6 +85,13 @@ int __index_package(Db *, const Dbt *key, const Dbt *, Dbt *skey)
   return(0);
 }
 
+static
+void __close(Dbc *cursor)
+{
+  if (cursor != NULL)
+    cursor->close();
+}
+
 rpmctl::bdb_environment::bdb_environment(const std::string &envroot) throw(rpmctl::rpmctl_except) :
   _env(0),
   _master(NULL),
@@ -247,5 +254,41 @@ UnicodeString rpmctl::bdb_environment::get(const UnicodeString &ns, const Unicod
   }
 }
 
-void rpmctl::bdb_environment::list(const UnicodeString &, rpmctl::environment_list_callback &) throw(rpmctl::rpmctl_except)
-{ throw(rpmctl::rpmctl_except("TODO:fixme")); }
+void rpmctl::bdb_environment::list(const UnicodeString &ns, rpmctl::environment_list_callback &cc) throw(rpmctl::rpmctl_except)
+{
+  std::auto_ptr<rpmctl::autoptr_array_adapter<char> > keybuffer(NULL);
+  int32_t keylength = __serialize(NULL, ns);
+  keybuffer.reset(new rpmctl::autoptr_array_adapter<char>(new char[keylength]));
+  __serialize(**keybuffer, ns);
+
+  Dbt dbkey(**keybuffer, keylength);
+  Dbt dbpval, dbpkey;
+
+  Dbc *cursor = NULL;
+  try
+  {
+    _secondary->cursor(NULL, &cursor, 0);
+
+    int ret = cursor->pget(&dbkey, &dbpkey, &dbpval, DB_SET);
+    while (ret != DB_NOTFOUND)
+    {
+      char *buffer;
+      buffer = static_cast<char*>(dbpkey.get_data());
+      UnicodeString key = __unserialize_tuple(buffer).second;
+      buffer = static_cast<char*>(dbpval.get_data());
+      UnicodeString val = __unserialize(buffer);
+      cc(ns, key, val);
+      ret = cursor->pget(&dbkey, &dbpkey, &dbpval, DB_NEXT_DUP);
+    }
+  }
+  catch (const DbException &e)
+  {
+    __close(cursor);
+    std::string what;
+    what += "dbexception: ";
+    what += e.what();
+    throw(rpmctl::rpmctl_except(what));
+  }
+  __close(cursor);
+
+}
