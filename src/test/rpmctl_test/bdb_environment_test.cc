@@ -60,16 +60,28 @@ namespace rpmctl_test
   TEST(bdb_environment_list_should_return_all_variables_available_database)
   {
     std::string dbhome = bdb_environment_setup();
-    {
-      rpmctl::bdb_environment env(dbhome);
-      env.put("namespace", "foobar1", "foo");
-      env.put("namespace", "foobar2", "bar");
-      env.put("namespace", "foobar3", "foobar");
-    }
-
     rpmctl::bdb_environment env(dbhome);
+    env.put("namespace", "foobar1", "foo");
+    env.put("namespace", "foobar2", "bar");
+    env.put("namespace", "foobar3", "foobar");
+
     rpmctl_test::memory_envlist_callback cc;
     env.list("namespace", cc);
+
+    CHECK(cc.variables().size() == 3);
+  }
+
+  TEST(bdb_environment_list_should_return_all_namespaces)
+  {
+    std::string dbhome = bdb_environment_setup();
+    rpmctl::bdb_environment env(dbhome);
+    env.put("namespace1", "foobar", "foobar");
+    env.put("namespace2", "foobar", "foobar");
+    env.put("namespace2", "foobaz", "foobaz");
+    env.put("namespace3", "foobar", "foobar");
+
+    rpmctl_test::memory_envlist_callback cc;
+    env.list(cc);
 
     CHECK(cc.variables().size() == 3);
   }
@@ -81,6 +93,17 @@ namespace rpmctl_test
 
     rpmctl_test::memory_envlist_callback cc;
     env.list("namespace", cc);
+
+    CHECK(cc.variables().size() == 0);
+  }
+
+  TEST(bdb_environment_list_should_return_nothing_if_there_are_no_namespaces)
+  {
+    std::string dbhome = bdb_environment_setup();
+    rpmctl::bdb_environment env(dbhome);
+
+    rpmctl_test::memory_envlist_callback cc;
+    env.list(cc);
 
     CHECK(cc.variables().size() == 0);
   }

@@ -41,6 +41,8 @@ namespace rpmctl
     virtual ~environment_list_callback();
 
     virtual void operator()(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &val) = 0;
+
+    virtual void operator()(const UnicodeString &ns) = 0;
   };
 
   class environment
@@ -55,6 +57,8 @@ namespace rpmctl
     virtual void put(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &val) throw(rpmctl_except) = 0;
 
     virtual void list(const UnicodeString &ns, environment_list_callback &) throw(rpmctl_except) = 0;
+
+    virtual void list(environment_list_callback &) throw(rpmctl_except) = 0;
   };
 
   class nil_env : public environment
@@ -69,6 +73,8 @@ namespace rpmctl
     virtual void put(const UnicodeString &, const UnicodeString &, const UnicodeString &) throw(rpmctl_except);
 
     virtual void list(const UnicodeString &, environment_list_callback &) throw(rpmctl_except);
+
+    virtual void list(environment_list_callback &) throw(rpmctl_except);
   };
 }
 

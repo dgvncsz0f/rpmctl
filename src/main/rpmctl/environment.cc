@@ -48,3 +48,6 @@ void rpmctl::nil_env::put(const UnicodeString &, const UnicodeString &, const Un
 
 void rpmctl::nil_env::list(const UnicodeString &, rpmctl::environment_list_callback &) throw(rpmctl::rpmctl_except)
 {}
+
+void rpmctl::nil_env::list(rpmctl::environment_list_callback &) throw(rpmctl::rpmctl_except)
+{}

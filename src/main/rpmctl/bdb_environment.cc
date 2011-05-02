@@ -292,3 +292,31 @@ void rpmctl::bdb_environment::list(const UnicodeString &ns, rpmctl::environment_
   __close(cursor);
 
 }
+
+void rpmctl::bdb_environment::list(rpmctl::environment_list_callback &cc) throw(rpmctl::rpmctl_except)
+{
+  Dbt dbkey, dbval;
+
+  Dbc *cursor = NULL;
+  try
+  {
+    _secondary->cursor(NULL, &cursor, 0);
+
+    while (cursor->get(&dbkey, &dbval, DB_NEXT_NODUP) != DB_NOTFOUND)
+    {
+      char *buffer;
+      buffer = static_cast<char*>(dbkey.get_data());
+      UnicodeString ns  = __unserialize(buffer);
+      cc(ns);
+    }
+  }
+  catch (const DbException &e)
+  {
+    __close(cursor);
+    std::string what;
+    what += "dbexception: ";
+    what += e.what();
+    throw(rpmctl::rpmctl_except(what));
+  }
+  __close(cursor);
+}

@@ -35,6 +35,11 @@ void rpmctl_test::memory_envlist_callback::operator()(const UnicodeString &ns, c
   _vars[ns +"::"+ key] = val;
 }
 
+void rpmctl_test::memory_envlist_callback::operator()(const UnicodeString &ns)
+{
+  _vars[ns] = "";
+}
+
 const std::map<UnicodeString,UnicodeString> &rpmctl_test::memory_envlist_callback::variables() const
 {
   return(_vars);

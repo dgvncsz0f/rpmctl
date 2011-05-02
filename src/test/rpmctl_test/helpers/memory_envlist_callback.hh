@@ -41,6 +41,7 @@ namespace rpmctl_test
     ~memory_envlist_callback();
 
     void operator()(const UnicodeString &, const UnicodeString &, const UnicodeString&);
+    void operator()(const UnicodeString &);
 
     const std::map<UnicodeString, UnicodeString> &variables() const;
 

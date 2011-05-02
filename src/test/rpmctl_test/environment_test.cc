@@ -48,6 +48,11 @@ namespace rpmctl_test
       _total += 1;
     }
 
+    void operator()(const UnicodeString &)
+    {
+      _total += 1;
+    }
+
     int _total;
   };
 
@@ -71,4 +76,13 @@ namespace rpmctl_test
     env.list("foobar", cc);
     CHECK(cc._total == 0);
   }
+
+  TEST(nil_env_namespace_list_should_do_nothing)
+  {
+    rpmctl::nil_env env;
+    count_callback cc;
+    env.list(cc);
+    CHECK(cc._total == 0);
+  }
+
 }

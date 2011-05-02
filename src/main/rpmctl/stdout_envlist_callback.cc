@@ -37,3 +37,8 @@ void rpmctl::stdout_envlist_callback::operator()(const UnicodeString &ns, const 
 {
   std::cout << ns << "::" << key << ": " << val << std::endl;
 }
+
+void rpmctl::stdout_envlist_callback::operator()(const UnicodeString &ns)
+{
+  std::cout << ns << std::endl;
+}

@@ -41,6 +41,7 @@ namespace rpmctl
     virtual ~stdout_envlist_callback();
 
     virtual void operator()(const UnicodeString &ns, const UnicodeString &key, const UnicodeString &val);
+    virtual void operator()(const UnicodeString &ns);
   };
 
 }

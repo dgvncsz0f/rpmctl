@@ -56,8 +56,8 @@ int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autons(new rpmctl::autoptr_malloc_adapter(ns));
   std::auto_ptr<rpmctl::autoptr_malloc_adapter> autokey(new rpmctl::autoptr_malloc_adapter(key));
   struct poptOption options[] = { { "home",      'h',  POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &home, 0, "Specify a home directory for the database environment", NULL },
-                                  { "namespace", 'n',  POPT_ARG_STRING, &ns,   0, "the package name", NULL },
-                                  { "key",       'k',  POPT_ARG_STRING, &key,  0, "The name of the variable. Without this list all keys", NULL },
+                                  { "namespace", 'n',  POPT_ARG_STRING, &ns,   0, "the package name. Without this list all namespaces", NULL },
+                                  { "key",       'k',  POPT_ARG_STRING, &key,  0, "The name of the variable. this list all keys", NULL },
                                   POPT_TABLEEND
                                 };
   
@@ -74,8 +74,9 @@ int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &
     {
       output.print_error(optctx, rc);
     }
-    else if (!output.validates_notnull(ns,  "namespace must not be null"))
+    else if (ns==NULL && key!=NULL)
     {
+      output.print_error("--key can not be used without --namespace");
       exstatus = EXIT_FAILURE;
     }
     else
@@ -86,10 +87,15 @@ int rpmctl::ui::get_command::exec(rpmctl::ui::input &input, rpmctl::ui::output &
         std::cout << env.get(ns, key, "<<<variable not defined>>>")
                   << std::endl;
       }
-      else
+      else if (ns != NULL)
       {
         stdout_envlist_callback cc;
         env.list(ns, cc);
+      }
+      else
+      {
+        stdout_envlist_callback cc;
+        env.list(cc);
       }
     }
   }
